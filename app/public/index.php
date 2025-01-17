@@ -19,13 +19,14 @@ require_once(__DIR__ . "/lib/Route.php");
 
 /**
  * Require routes
- *  Defines the routes that our application will ned
+ *  Defines the routes that our application will need
  */
 require_once(__DIR__ . "/routes/index.php");
 require_once(__DIR__ . "/routes/user.php");
 require_once(__DIR__ . "/routes/appointment.php");
 require_once(__DIR__ . "/routes/hairdresser.php");
 require_once(__DIR__ . "/routes/auth.php");
+require_once(__DIR__ . "/routes/profile.php");
 
 // Start the router, enabling handling requests
 Route::run();

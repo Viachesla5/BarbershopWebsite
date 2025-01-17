@@ -77,5 +77,12 @@ class HairdresserModel extends BaseModel
         return $stmt->rowCount();
     }
 
-    // Optionally add: getByEmail, getByName, etc.
+    public function getByEmail($email)
+    {
+        $sql = "SELECT * FROM hairdressers WHERE email = :email LIMIT 1";
+        $stmt = self::$pdo->prepare($sql);
+        $stmt->execute([':email' => $email]);
+        return $stmt->fetch(); // returns array or false if not found
+    }
+    // Optionally add: getByName, etc.
 }

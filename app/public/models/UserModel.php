@@ -54,22 +54,26 @@ class UserModel extends BaseModel
 
     public function update($id, $data)
     {
-        $sql = "UPDATE users
-                SET email = :email,
+        $sql = "UPDATE users SET 
+                    email = :email,
                     username = :username,
+                    password = :password,
                     phone_number = :phone_number,
                     address = :address,
                     profile_picture = :profile_picture
                 WHERE id = :id";
+
         $stmt = self::$pdo->prepare($sql);
         $stmt->execute([
             ':email' => $data['email'],
             ':username' => $data['username'],
-            ':phone_number' => $data['phone_number'] ?? null,
-            ':address' => $data['address'] ?? null,
-            ':profile_picture' => $data['profile_picture'] ?? null,
+            ':password' => $data['password'], // hashed or existing
+            ':phone_number' => $data['phone_number'],
+            ':address' => $data['address'],
+            ':profile_picture' => $data['profile_picture'],
             ':id' => $id
         ]);
+
         return $stmt->rowCount();
     }
 

@@ -21,22 +21,33 @@ class AuthController
             $email = $_POST['email'] ?? '';
             $password = $_POST['password'] ?? '';
 
-            // Check the user in the users table
+            // 1) Check in the users table
             $user = $this->userModel->getByEmail($email);
             if ($user && password_verify($password, $user['password'])) {
-                // Valid login
+                // Valid login as a customer
                 $_SESSION['user_id'] = $user['id'];
-                $_SESSION['role'] = 'customer';
 
                 header("Location: /");
                 exit;
-            } else {
-                $error = "Invalid email or password.";
             }
+
+            // 2) If not found in users, check the hairdressers table
+            $hairdresser = $this->hairdresserModel->getByEmail($email);
+            if ($hairdresser && password_verify($password, $hairdresser['password'])) {
+                // Valid login as a hairdresser
+                $_SESSION['hairdresser_id'] = $hairdresser['id'];
+
+                // Redirect to a hairdresser dashboard or home
+                header("Location: /hairdressers");
+                exit;
+            }
+
+            // 3) If neither user nor hairdresser matched, set an error message
+            $error = "Invalid email or password.";
         }
 
-        // If GET or invalid POST, load the login form
-        require(__DIR__ . '/../views/auth/login.php');
+        // GET request (or error on POST)
+        require(__DIR__ . "/../views/auth/login.php");
     }
 
     // Show the register form (GET) or handle registration (POST)
