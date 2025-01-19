@@ -21,7 +21,7 @@
                     <a href="/logout" class="btn btn-danger">Logout</a>
                 <?php elseif (!empty($_SESSION['user_id'])): ?>
                     <a href="/profile" class="btn btn-outline-light me-2">My Profile</a>
-                    <a href="/appointments" class="btn btn-outline-light me-2">My Appointments</a>
+                    <a href="/appointments/calendar" class="btn btn-outline-light me-2">Appointments</a>
                     <a href="/hairdressers" class="btn btn-outline-light me-2">View Hairdressers</a>
                     <a href="/logout" class="btn btn-danger">Logout</a>
                 <?php else: ?>  
