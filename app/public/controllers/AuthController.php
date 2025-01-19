@@ -104,7 +104,6 @@ class AuthController
             $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
             // Insert into users table only
-            // (since no "hairdresser" role is allowed for self-registration)
             $data = [
                 'email'    => $email,
                 'username' => $username,

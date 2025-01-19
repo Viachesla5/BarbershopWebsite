@@ -2,7 +2,7 @@
 
 require_once(__DIR__ . '/../models/UserModel.php');
 require_once(__DIR__ . '/../models/HairdresserModel.php');
-require_once(__DIR__ . '/../lib/Auth.php'); // your helper file
+require_once(__DIR__ . '/../lib/Auth.php'); // your helper file with requireProfileAccess()
 
 class ProfileController
 {
@@ -15,6 +15,9 @@ class ProfileController
         $this->hairdresserModel = new HairdresserModel();
     }
 
+    /**
+     * Handle viewing and editing a user's or hairdresser's profile.
+     */
     public function profile()
     {
         // 1) Ensure that at least user/hairdresser/admin is logged in
@@ -39,76 +42,82 @@ class ProfileController
             $profileData = $this->userModel->getById($userId);
         }
 
-        // 3) If POST, handle updates
+        // 3) If POST, handle profile updates
         $successMsg = null;
+        $errors = []; // optional array to store error messages
+
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Gather form inputs (apply to either user or hairdresser)
-            $newEmail       = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL)          ?? $profileData['email']        ?? '';
-            $newUsername    = filter_var($_POST['username'], FILTER_SANITIZE_SPECIAL_CHARS)       ?? $profileData['username']     ?? '';
-            $newPassword    = filter_var($_POST['new_password'], FILTER_SANITIZE_SPECIAL_CHARS)   ?? '';
-            $newPhone       = filter_var($_POST['phone_number'], FILTER_SANITIZE_NUMBER_INT)   ?? $profileData['phone_number'] ?? '';
-            $newAddress     = filter_var($_POST['address'], FILTER_SANITIZE_SPECIAL_CHARS)        ?? $profileData['address']      ?? '';
-            $newPicture     = $_POST['profile_picture']?? $profileData['profile_picture'] ?? '';
+            $newEmail       = filter_var($_POST['email']          ?? '', FILTER_SANITIZE_EMAIL);
+            $newUsername    = filter_var($_POST['username']       ?? '', FILTER_SANITIZE_SPECIAL_CHARS);
+            $newPasswordRaw = filter_var($_POST['new_password']   ?? '', FILTER_SANITIZE_SPECIAL_CHARS);
+            $newPhone       = filter_var($_POST['phone_number']   ?? '', FILTER_SANITIZE_NUMBER_INT);
+            $newAddress     = filter_var($_POST['address']        ?? '', FILTER_SANITIZE_SPECIAL_CHARS);
+            
+            // This is the user-provided profile picture URL or file path
+            $newPicture     = trim($_POST['profile_picture']      ?? '');
+            // Validate the URL if it's not empty (optional)
+            if (!empty($newPicture)) {
+                $validatedPicture = filter_var($newPicture, FILTER_VALIDATE_URL);
+                if ($validatedPicture === false) {
+                   
+                }
+            }
 
-            // If there's a "specialization" field in the form:
-            // only honor it if not hairdresser
-            if (isset($_POST['specialization']) && $role !== 'hairdresser') {
+            // If there's a "specialization" field for hairdressers, posted or not
+            $newSpecialization = $profileData['specialization'] ?? null; // fallback
+            if (isset($_POST['specialization']) && $role === 'hairdresser') {
                 $newSpecialization = filter_var($_POST['specialization'], FILTER_SANITIZE_SPECIAL_CHARS);
-            } else {
-                // Keep old specialization for hairdressers or no specialization
-                $newSpecialization = $profileData['specialization'] ?? null;
             }
 
             // Only update password if user typed something
-            if (!empty($newPassword)) {
-                $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
+            if (!empty($newPasswordRaw)) {
+                $hashedPassword = password_hash($newPasswordRaw, PASSWORD_DEFAULT);
             } else {
-                // Keep old password
+                // Keep old password from DB
                 $hashedPassword = $profileData['password'] ?? '';
             }
 
-            // Build updated data array
+            
             $data = [
                 'email'           => $newEmail,
-                'name'            => $newUsername, // For hairdressers it's 'name', for user it's 'username'
-                'username'        => $newUsername, // For user models
-                'password'        => $hashedPassword,
                 'phone_number'    => $newPhone,
                 'address'         => $newAddress,
-                'profile_picture' => $newPicture,
-                'specialization'  => $newSpecialization
+                'password'        => $hashedPassword,
+                'profile_picture' => $newPicture
             ];
 
-            // If the user is an admin or normal user -> update in UserModel
-            // If hairdresser -> update in HairdresserModel
-            if ($role === 'admin' || $role === 'user') {
-                // Merge in is_admin if admin. 
-                // If $role==='admin', keep the is_admin from $profileData.
-                // If $role==='user', set is_admin=0 or keep old if you prefer not to override.
-                $isAdminValue = ($role === 'admin' ? ($profileData['is_admin'] ?? 1) : 0);
-
-                // If your UserModel->update() requires is_admin not be null:
-                $data['is_admin'] = $isAdminValue;
-
-                // For user models, the key for 'name' is actually 'username' in DB
-                // so rename or ensure your model uses 'username'
-                $this->userModel->update($profileData['id'], $data);
-                // Refresh profile data
-                $profileData = $this->userModel->getById($profileData['id']);
+            // If user/hairdresser name field in DB is "name" for hairdressers, "username" for normal users:
+            if ($role === 'hairdresser') {
+                $data['name'] = $newUsername;           // The hairdresser table might have a 'name' column
+                $data['specialization'] = $newSpecialization;
             } else {
-                // hairdresser
-                // In hairdressers table, typically 'name' is the hairdresser name
-                // so rename 'username' => 'name' if needed
-                $data['name'] = $newUsername;
-                $this->hairdresserModel->update($profileData['id'], $data);
-                // Refresh profile data
-                $profileData = $this->hairdresserModel->getById($profileData['id']);
+                $data['username'] = $newUsername;       // The users table might have 'username'
             }
 
-            $successMsg = "Profile updated successfully!";
+            // For admin or normal user:
+            // Possibly keep is_admin from the old data if admin
+            if ($role === 'admin' || $role === 'user') {
+                // If your user table has an 'is_admin' column, set it to old value or 0:
+                $isAdminVal = ($role === 'admin') ? ($profileData['is_admin'] ?? 1) : 0;
+                $data['is_admin'] = $isAdminVal;
+            }
+
+            // If no errors found, proceed with update
+            if (empty($errors)) {
+                // Call the correct model depending on role
+                if ($role === 'hairdresser') {
+                    $this->hairdresserModel->update($profileData['id'], $data);
+                    $profileData = $this->hairdresserModel->getById($profileData['id']);
+                } else {
+                    $this->userModel->update($profileData['id'], $data);
+                    $profileData = $this->userModel->getById($profileData['id']);
+                }
+                $successMsg = "Profile updated successfully!";
+            }
         }
 
-        // 4) Load the profile view with the $profileData, $role, and $successMsg
+        // 4) Finally, load the profile view with $profileData, $role, and potential $successMsg or $errors
         require(__DIR__ . '/../views/profile/profile.php');
     }
 }

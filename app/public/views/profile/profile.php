@@ -12,15 +12,28 @@
         <?php endif; ?>
     </h1>
 
+    <!-- SHOW SUCCESS MESSAGE IF ANY -->
     <?php if (!empty($successMsg)): ?>
         <div class="mb-4 text-green-500">
             <?= htmlspecialchars($successMsg); ?>
         </div>
     <?php endif; ?>
 
-    <!-- READ-ONLY SECTION -->
+    <!-- SHOW ERROR MESSAGES IF ANY -->
+    <?php if (!empty($errors)): ?>
+        <div class="mb-4 text-red-500">
+            <ul>
+                <?php foreach ($errors as $err): ?>
+                    <li><?= htmlspecialchars($err, ENT_QUOTES, 'UTF-8'); ?></li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
+    <?php endif; ?>
+
+    <!-- CURRENT PROFILE INFO (READ-ONLY) -->
     <div class="mb-8 bg-gray-100 p-4 rounded">
-        <p><strong>Email:</strong> <?= htmlspecialchars($profileData['email']); ?></p>
+        <p><strong>Email:</strong> <?= htmlspecialchars($profileData['email'] ?? ''); ?></p>
+
         <?php if ($role === 'hairdresser'): ?>
             <p><strong>Name:</strong> <?= htmlspecialchars($profileData['name'] ?? ''); ?></p>
             <p><strong>Specialization:</strong> <?= htmlspecialchars($profileData['specialization'] ?? ''); ?></p>
@@ -31,11 +44,14 @@
         <p><strong>Phone:</strong> <?= htmlspecialchars($profileData['phone_number'] ?? ''); ?></p>
         <p><strong>Address:</strong> <?= htmlspecialchars($profileData['address'] ?? ''); ?></p>
 
+        <!-- Display profile picture if exists -->
         <?php if (!empty($profileData['profile_picture'])): ?>
             <p><strong>Profile Picture:</strong></p>
-            <img src="<?= htmlspecialchars($profileData['profile_picture']); ?>" 
-                 alt="Profile Picture" 
+            <img src="<?= htmlspecialchars($profileData['profile_picture'], ENT_QUOTES, 'UTF-8'); ?>"
+                 alt="Profile Picture"
                  class="w-32 h-32 object-cover rounded border">
+        <?php else: ?>
+            <p><em>No profile picture.</em></p>
         <?php endif; ?>
     </div>
 
@@ -43,20 +59,20 @@
     <form action="/profile" method="POST" class="max-w-md bg-white p-6 rounded shadow">
         <h2 class="text-xl font-semibold mb-4">Edit Profile</h2>
 
-        <!-- Example: Email, same for everyone -->
+        <!-- EMAIL -->
         <div class="mb-4">
             <label class="block mb-1 font-semibold" for="email">Email</label>
             <input 
                 type="email"
                 name="email"
                 id="email"
-                value="<?= htmlspecialchars($profileData['email']); ?>"
+                value="<?= htmlspecialchars($profileData['email'] ?? ''); ?>"
                 class="w-full border border-gray-300 rounded px-3 py-2"
             >
         </div>
 
+        <!-- USERNAME or NAME -->
         <?php if ($role === 'hairdresser'): ?>
-            <!-- Hairdresser's "name" instead of "username" -->
             <div class="mb-4">
                 <label class="block mb-1 font-semibold" for="username">Name</label>
                 <input
@@ -67,16 +83,7 @@
                     class="w-full border border-gray-300 rounded px-3 py-2"
                 >
             </div>
-
-            <!-- SHOW the specialization as read-only or simply omit entirely -->
-            <div class="mb-4 bg-gray-100 p-2 rounded">
-                <label class="block mb-1 font-semibold">Specialization (Read-Only)</label>
-                <p class="text-gray-600">
-                    <?= htmlspecialchars($profileData['specialization'] ?? ''); ?>
-                </p>
-            </div>
         <?php else: ?>
-            <!-- For user/admin, use "username" label -->
             <div class="mb-4">
                 <label class="block mb-1 font-semibold" for="username">Username</label>
                 <input
@@ -126,21 +133,38 @@
             >
         </div>
 
-        <!-- PROFILE PICTURE -->
+        <!-- PROFILE PICTURE (URL) -->
         <div class="mb-4">
-            <label class="block mb-1 font-semibold" for="profile_picture">Profile Picture</label>
+            <label class="block mb-1 font-semibold" for="profile_picture">Profile Picture (URL)</label>
             <input
                 type="text"
                 name="profile_picture"
                 id="profile_picture"
                 value="<?= htmlspecialchars($profileData['profile_picture'] ?? ''); ?>"
                 class="w-full border border-gray-300 rounded px-3 py-2"
-                placeholder="File path or URL"
+                placeholder="Enter an image URL or local file path"
             >
         </div>
+
+        <!-- HAIRDRESSER SPECIALIZATION (If you want to show a field for editing it) 
+        <?php if ($role === 'hairdresser'): ?>
+            <div class="mb-4">
+                <label class="block mb-1 font-semibold" for="specialization">Specialization</label>
+                <input
+                    type="text"
+                    name="specialization"
+                    id="specialization"
+                    value="<?= htmlspecialchars($profileData['specialization'] ?? ''); ?>"
+                    class="w-full border border-gray-300 rounded px-3 py-2"
+                >
+            </div>
+        <?php endif; ?>
+        -->
 
         <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
             Save Changes
         </button>
     </form>
 </div>
+
+<?php require(__DIR__ . '/../partials/footer.php'); ?>

@@ -42,13 +42,8 @@ class AppointmentController
             // Combine date & time into a start
             $start = $apt['appointment_date'] . 'T' . $apt['appointment_time'];
 
-            // Create a user-friendly title, e.g.:
-            // "Doe (Hairdresser: Mary) at HH:MM" – or any format you like
-            // We'll display hairdresser_name, user_name, or anything else
             $userName = $apt['user_name'];
             $hdName   = $apt['hairdresser_name'];
-            // For time, FullCalendar already uses 'start' for the date/time
-            // but we might put it in the title or just display hairdresser + user
 
             $title = "User: $userName, HD: $hdName";
 
@@ -56,7 +51,6 @@ class AppointmentController
                 'id'    => $apt['id'],
                 'title' => $title,    // The event label
                 'start' => $start,    // Full datetime, e.g., 2025-01-19T07:00:00
-                // If you want an 'end', define it (like +30 min or a set duration)
             ];
         }
 

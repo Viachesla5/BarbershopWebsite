@@ -58,8 +58,6 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       // If confirmed, send a request to delete
-      // We'll assume you have an endpoint like /appointments/deleteFromCalendar
-      // that accepts POST requests with "id" parameter
       fetch('/appointments/deleteFromCalendar', {
         method: 'POST',
         headers: {
@@ -73,11 +71,8 @@ document.addEventListener('DOMContentLoaded', function() {
       .then(data => {
         if (data.success) {
           alert("Appointment Deleted!");
-          // Option 1: Directly remove the event from the calendar
           info.event.remove();
 
-          // Option 2: Or just do a refetch:
-          // calendar.refetchEvents();
         } else {
           alert("Error: " + data.message);
         }
