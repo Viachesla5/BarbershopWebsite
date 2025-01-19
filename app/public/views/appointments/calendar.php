@@ -15,7 +15,7 @@
             // Dynamically load hairdressers from the database
             require_once(__DIR__ . "/../../models/HairdresserModel.php");
             $hairdresserModel = new HairdresserModel();
-            $hairdressers = $hairdresserModel->getAll(); // Assumes getAll() returns an array of hairdressers
+            $hairdressers = $hairdresserModel->getAll(); // getAll() returns an array of hairdressers
 
             foreach ($hairdressers as $hairdresser) {
                 echo "<option value=\"" . htmlspecialchars($hairdresser['id']) . "\">"

@@ -27,19 +27,27 @@
                                 <?= htmlspecialchars($h['specialization']); ?>
                             </td>
                             <td class="py-2 px-4 border-b text-center">
+                                <!-- Show link is visible to everyone -->
                                 <a href="/hairdressers/<?= $h['id']; ?>"
                                    class="text-blue-500 hover:underline mr-2">
                                     Show
                                 </a>
-                                <a href="/hairdressers/edit/<?= $h['id']; ?>"
-                                   class="text-green-500 hover:underline mr-2">
-                                    Edit
-                                </a>
-                                <a href="/hairdressers/delete/<?= $h['id']; ?>"
-                                   class="text-red-500 hover:underline"
-                                   onclick="return confirm('Are you sure you want to delete this hairdresser?');">
-                                    Delete
-                                </a>
+
+                                <?php
+                                // ADDED CODE: Only show Edit/Delete if admin session is set
+                                // (assuming $_SESSION['is_admin'] == 1 means admin user)
+                                if (!empty($_SESSION['is_admin']) && $_SESSION['is_admin'] == 1): 
+                                ?>
+                                    <a href="/hairdressers/edit/<?= $h['id']; ?>"
+                                       class="text-green-500 hover:underline mr-2">
+                                        Edit
+                                    </a>
+                                    <a href="/hairdressers/delete/<?= $h['id']; ?>"
+                                       class="text-red-500 hover:underline"
+                                       onclick="return confirm('Are you sure you want to delete this hairdresser?');">
+                                        Delete
+                                    </a>
+                                <?php endif; ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>

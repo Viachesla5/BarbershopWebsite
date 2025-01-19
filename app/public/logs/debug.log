@@ -46,3 +46,27 @@ Array
     [appointment_time] => 18:00
     [status] => upcoming
 )
+Array
+(
+    [user_id] => 10
+    [hairdresser_id] => 7
+    [appointment_date] => 2025-01-09
+    [appointment_time] => 14:20
+    [status] => upcoming
+)
+Array
+(
+    [user_id] => 10
+    [hairdresser_id] => 7
+    [appointment_date] => 2025-01-09
+    [appointment_time] => 14:27
+    [status] => upcoming
+)
+Array
+(
+    [user_id] => 10
+    [hairdresser_id] => 7
+    [appointment_date] => 2025-01-09
+    [appointment_time] => 14:25
+    [status] => upcoming
+)
