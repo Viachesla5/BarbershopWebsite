@@ -2,7 +2,15 @@
 
 <div class="container mx-auto mt-8">
 
-    <h1 class="text-2xl font-bold mb-4">My Profile</h1>
+    <h1 class="text-2xl font-bold mb-4">
+        <?php if ($role === 'admin'): ?>
+            Admin Profile
+        <?php elseif ($role === 'hairdresser'): ?>
+            Hairdresser Profile
+        <?php else: ?>
+            User Profile
+        <?php endif; ?>
+    </h1>
 
     <?php if (!empty($successMsg)): ?>
         <div class="mb-4 text-green-500">
@@ -10,49 +18,76 @@
         </div>
     <?php endif; ?>
 
-    <!-- Display user info (read-only section) -->
+    <!-- READ-ONLY SECTION -->
     <div class="mb-8 bg-gray-100 p-4 rounded">
-        <p><strong>Email:</strong> <?= htmlspecialchars($user['email']); ?></p>
-        <p><strong>Username:</strong> <?= htmlspecialchars($user['username']); ?></p>
-        <p><strong>Phone:</strong> <?= htmlspecialchars($user['phone_number'] ?? ''); ?></p>
-        <p><strong>Address:</strong> <?= htmlspecialchars($user['address'] ?? ''); ?></p>
-        
-        <?php if (!empty($user['profile_picture'])): ?>
+        <p><strong>Email:</strong> <?= htmlspecialchars($profileData['email']); ?></p>
+        <?php if ($role === 'hairdresser'): ?>
+            <p><strong>Name:</strong> <?= htmlspecialchars($profileData['name'] ?? ''); ?></p>
+            <p><strong>Specialization:</strong> <?= htmlspecialchars($profileData['specialization'] ?? ''); ?></p>
+        <?php else: ?>
+            <p><strong>Username:</strong> <?= htmlspecialchars($profileData['username'] ?? ''); ?></p>
+        <?php endif; ?>
+
+        <p><strong>Phone:</strong> <?= htmlspecialchars($profileData['phone_number'] ?? ''); ?></p>
+        <p><strong>Address:</strong> <?= htmlspecialchars($profileData['address'] ?? ''); ?></p>
+
+        <?php if (!empty($profileData['profile_picture'])): ?>
             <p><strong>Profile Picture:</strong></p>
-            <img src="<?= htmlspecialchars($user['profile_picture']); ?>" 
+            <img src="<?= htmlspecialchars($profileData['profile_picture']); ?>" 
                  alt="Profile Picture" 
                  class="w-32 h-32 object-cover rounded border">
         <?php endif; ?>
     </div>
 
-    <!-- Edit form (same page) -->
+    <!-- EDIT FORM -->
     <form action="/profile" method="POST" class="max-w-md bg-white p-6 rounded shadow">
-        
         <h2 class="text-xl font-semibold mb-4">Edit Profile</h2>
 
-        <!-- EMAIL -->
+        <!-- Example: Email, same for everyone -->
         <div class="mb-4">
-            <label class="block mb-1 font-semibold" for="email">Email (optional)</label>
+            <label class="block mb-1 font-semibold" for="email">Email</label>
             <input 
                 type="email"
                 name="email"
                 id="email"
-                value="<?= htmlspecialchars($user['email']); ?>"
+                value="<?= htmlspecialchars($profileData['email']); ?>"
                 class="w-full border border-gray-300 rounded px-3 py-2"
             >
         </div>
 
-        <!-- USERNAME -->
-        <div class="mb-4">
-            <label class="block mb-1 font-semibold" for="username">Username (optional)</label>
-            <input
-                type="text"
-                name="username"
-                id="username"
-                value="<?= htmlspecialchars($user['username']); ?>"
-                class="w-full border border-gray-300 rounded px-3 py-2"
-            >
-        </div>
+        <?php if ($role === 'hairdresser'): ?>
+            <!-- Hairdresser's "name" instead of "username" -->
+            <div class="mb-4">
+                <label class="block mb-1 font-semibold" for="username">Name</label>
+                <input
+                    type="text"
+                    name="username"
+                    id="username"
+                    value="<?= htmlspecialchars($profileData['name'] ?? ''); ?>"
+                    class="w-full border border-gray-300 rounded px-3 py-2"
+                >
+            </div>
+
+            <!-- SHOW the specialization as read-only or simply omit entirely -->
+            <div class="mb-4 bg-gray-100 p-2 rounded">
+                <label class="block mb-1 font-semibold">Specialization (Read-Only)</label>
+                <p class="text-gray-600">
+                    <?= htmlspecialchars($profileData['specialization'] ?? ''); ?>
+                </p>
+            </div>
+        <?php else: ?>
+            <!-- For user/admin, use "username" label -->
+            <div class="mb-4">
+                <label class="block mb-1 font-semibold" for="username">Username</label>
+                <input
+                    type="text"
+                    name="username"
+                    id="username"
+                    value="<?= htmlspecialchars($profileData['username'] ?? ''); ?>"
+                    class="w-full border border-gray-300 rounded px-3 py-2"
+                >
+            </div>
+        <?php endif; ?>
 
         <!-- NEW PASSWORD -->
         <div class="mb-4">
@@ -69,36 +104,36 @@
 
         <!-- PHONE NUMBER -->
         <div class="mb-4">
-            <label class="block mb-1 font-semibold" for="phone_number">Phone Number (optional)</label>
+            <label class="block mb-1 font-semibold" for="phone_number">Phone Number</label>
             <input
                 type="text"
                 name="phone_number"
                 id="phone_number"
-                value="<?= htmlspecialchars($user['phone_number'] ?? ''); ?>"
+                value="<?= htmlspecialchars($profileData['phone_number'] ?? ''); ?>"
                 class="w-full border border-gray-300 rounded px-3 py-2"
             >
         </div>
 
         <!-- ADDRESS -->
         <div class="mb-4">
-            <label class="block mb-1 font-semibold" for="address">Address (optional)</label>
+            <label class="block mb-1 font-semibold" for="address">Address</label>
             <input
                 type="text"
                 name="address"
                 id="address"
-                value="<?= htmlspecialchars($user['address'] ?? ''); ?>"
+                value="<?= htmlspecialchars($profileData['address'] ?? ''); ?>"
                 class="w-full border border-gray-300 rounded px-3 py-2"
             >
         </div>
 
         <!-- PROFILE PICTURE -->
         <div class="mb-4">
-            <label class="block mb-1 font-semibold" for="profile_picture">Profile Picture (optional)</label>
+            <label class="block mb-1 font-semibold" for="profile_picture">Profile Picture</label>
             <input
                 type="text"
                 name="profile_picture"
                 id="profile_picture"
-                value="<?= htmlspecialchars($user['profile_picture'] ?? ''); ?>"
+                value="<?= htmlspecialchars($profileData['profile_picture'] ?? ''); ?>"
                 class="w-full border border-gray-300 rounded px-3 py-2"
                 placeholder="File path or URL"
             >
@@ -109,5 +144,3 @@
         </button>
     </form>
 </div>
-
-<?php require(__DIR__ . '/../partials/footer.php'); ?>

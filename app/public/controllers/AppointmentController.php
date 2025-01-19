@@ -19,6 +19,8 @@ class AppointmentController
 
     public function listAll()
     {
+        requireHairdresser();
+
         // Could show all appointments or filter by user/hairdresser
         $appointments = $this->appointmentModel->getAll();
         // Load a view to display them
@@ -27,6 +29,8 @@ class AppointmentController
 
     public function createAppointment()
     {
+        requireHairdresserAndUser();
+
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Handle creation
             $data = [

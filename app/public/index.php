@@ -27,6 +27,8 @@ require_once(__DIR__ . "/routes/appointment.php");
 require_once(__DIR__ . "/routes/hairdresser.php");
 require_once(__DIR__ . "/routes/auth.php");
 require_once(__DIR__ . "/routes/profile.php");
+require_once(__DIR__ . "/routes/admin.php");
+require_once(__DIR__ . '/lib/Auth.php');
 
 // Start the router, enabling handling requests
 Route::run();

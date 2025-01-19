@@ -12,17 +12,20 @@ class HairdresserModel extends BaseModel
     // CREATE new hairdresser
     public function create($data)
     {
-        $sql = "INSERT INTO hairdressers (email, name, password, phone_number, address, profile_picture, specialization)
-                VALUES (:email, :name, :password, :phone_number, :address, :profile_picture, :specialization)";
+        $sql = "INSERT INTO hairdressers (
+                    email, name, password, phone_number, address, profile_picture, specialization
+                ) VALUES (
+                    :email, :name, :password, :phone_number, :address, :profile_picture, :specialization
+                )";
         $stmt = self::$pdo->prepare($sql);
         $stmt->execute([
             ':email' => $data['email'],
-            ':name' => $data['name'],
-            ':password' => $data['password'],  // hashed
-            ':phone_number' => $data['phone_number'] ?? null,
-            ':address' => $data['address'] ?? null,
-            ':profile_picture' => $data['profile_picture'] ?? null,
-            ':specialization' => $data['specialization'] ?? null,
+            ':name'  => $data['name'],
+            ':password' => $data['password'],
+            ':phone_number' => $data['phone_number'],
+            ':address' => $data['address'],
+            ':profile_picture' => $data['profile_picture'],
+            ':specialization' => $data['specialization']
         ]);
         return self::$pdo->lastInsertId();
     }
@@ -47,9 +50,10 @@ class HairdresserModel extends BaseModel
     // UPDATE hairdresser
     public function update($id, $data)
     {
-        $sql = "UPDATE hairdressers
+        $sql = "UPDATE hairdressers 
                 SET email = :email,
                     name = :name,
+                    password = :password,
                     phone_number = :phone_number,
                     address = :address,
                     profile_picture = :profile_picture,
@@ -58,11 +62,12 @@ class HairdresserModel extends BaseModel
         $stmt = self::$pdo->prepare($sql);
         $stmt->execute([
             ':email' => $data['email'],
-            ':name' => $data['name'],
-            ':phone_number' => $data['phone_number'] ?? null,
-            ':address' => $data['address'] ?? null,
-            ':profile_picture' => $data['profile_picture'] ?? null,
-            ':specialization' => $data['specialization'] ?? null,
+            ':name'  => $data['name'],
+            ':password' => $data['password'],
+            ':phone_number' => $data['phone_number'],
+            ':address' => $data['address'],
+            ':profile_picture' => $data['profile_picture'],
+            ':specialization' => $data['specialization'],
             ':id' => $id
         ]);
         return $stmt->rowCount();

@@ -12,16 +12,20 @@ class UserModel extends BaseModel
     // CREATE new user
     public function create($data)
     {
-        $sql = "INSERT INTO users (email, username, password, phone_number, address, profile_picture)
-                VALUES (:email, :username, :password, :phone_number, :address, :profile_picture)";
+        $sql = "INSERT INTO users (
+                    email, username, password, phone_number, address, profile_picture, is_admin
+                ) VALUES (
+                    :email, :username, :password, :phone_number, :address, :profile_picture, :is_admin
+                )";
         $stmt = self::$pdo->prepare($sql);
         $stmt->execute([
             ':email' => $data['email'],
             ':username' => $data['username'],
-            ':password' => $data['password'],  // hashed
-            ':phone_number' => $data['phone_number'] ?? null,
-            ':address' => $data['address'] ?? null,
-            ':profile_picture' => $data['profile_picture'] ?? null,
+            ':password' => $data['password'],
+            ':phone_number' => $data['phone_number'],
+            ':address' => $data['address'],
+            ':profile_picture' => $data['profile_picture'],
+            ':is_admin' => $data['is_admin']
         ]);
         return self::$pdo->lastInsertId();
     }
@@ -54,26 +58,26 @@ class UserModel extends BaseModel
 
     public function update($id, $data)
     {
-        $sql = "UPDATE users SET 
-                    email = :email,
+        $sql = "UPDATE users 
+                SET email = :email,
                     username = :username,
                     password = :password,
                     phone_number = :phone_number,
                     address = :address,
-                    profile_picture = :profile_picture
+                    profile_picture = :profile_picture,
+                    is_admin = :is_admin
                 WHERE id = :id";
-
         $stmt = self::$pdo->prepare($sql);
         $stmt->execute([
             ':email' => $data['email'],
             ':username' => $data['username'],
-            ':password' => $data['password'], // hashed or existing
+            ':password' => $data['password'],
             ':phone_number' => $data['phone_number'],
             ':address' => $data['address'],
             ':profile_picture' => $data['profile_picture'],
+            ':is_admin' => $data['is_admin'],
             ':id' => $id
         ]);
-
         return $stmt->rowCount();
     }
 
