@@ -21,3 +21,23 @@ Route::add('/appointments/delete/([0-9]*)', function($id) {
     $controller = new AppointmentController();
     $controller->deleteAppointment($id);
 }, 'get');
+
+
+
+// 1. Route to display the FullCalendar view
+Route::add('/appointments/calendar', function() {
+    $controller = new AppointmentController();
+    $controller->calendar();
+}, 'get');
+
+// 2. Route to fetch appointment events as JSON
+Route::add('/appointments/events', function() {
+    $controller = new AppointmentController();
+    $controller->getCalendarEvents();
+}, 'get');
+
+// 3. Route to create a new appointment from calendar selection
+Route::add('/appointments/createFromCalendar', function() {
+    $controller = new AppointmentController();
+    $controller->createFromCalendar();
+}, 'post');

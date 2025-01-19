@@ -1,5 +1,5 @@
 <?php
-
+require_once(__DIR__ . '/../lib/Validator.php');
 require_once(__DIR__ . '/../models/UserModel.php');
 require_once(__DIR__ . '/../models/HairdresserModel.php');
 require_once(__DIR__ . '/../models/AppointmentModel.php');
@@ -52,6 +52,45 @@ class AdminController
         requireAdmin();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $validator = new Validator();
+
+            $email          = trim($_POST['email'] ?? '');
+            $username       = trim($_POST['username'] ?? '');
+            $password       = $_POST['password'] ?? '';
+            $phoneNumber    = trim($_POST['phone_number'] ?? '');
+            $address        = trim($_POST['address'] ?? '');
+            $profilePicture = trim($_POST['profile_picture'] ?? '');
+            $isAdminInput   = $_POST['is_admin'] ?? null;
+
+            // Validations using your Validator helper
+
+            // 1. Email must be valid
+            $validator->validateEmail($email);
+
+            // 2. Username must be at least 3 chars
+            $validator->validateUsername($username, 3);
+
+            // 3. Password must be at least 6 chars
+            $validator->validatePassword($password, 6);
+
+            // 4. Phone number is optional, but if provided, must contain only digits
+            if (!empty($phoneNumber)) {
+                $validator->validatePhoneNumber($phoneNumber);
+            }
+
+            // 5. Address is optional, but let's limit to 200 chars
+            // Adjust as needed
+            if (!empty($address)) {
+                $validator->validateMaxLength('address', $address, 200, 'Address');
+            }
+
+            // Check for errors
+            if ($validator->hasErrors()) {
+                $errors = $validator->getErrors();
+                require(__DIR__ . '/../views/auth/register.php');
+                return;
+            }
+
             $data = [
                 'email' => $_POST['email'],
                 'username' => $_POST['username'],

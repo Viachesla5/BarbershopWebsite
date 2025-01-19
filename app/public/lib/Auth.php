@@ -15,8 +15,8 @@ function requireHairdresser() {
 }
 
 function requireAdmin() {
-    // For admin, we check user_id + is_admin
-    if (empty($_SESSION['user_id']) || empty($_SESSION['is_admin'])) {
+    // Ensure that the admin session variables exist and are correctly set
+    if (!isset($_SESSION['user_id']) || !isset($_SESSION['is_admin']) || $_SESSION['is_admin'] != 1) {
         header("Location: /login");
         exit;
     }
@@ -39,8 +39,7 @@ function requireHairdresserAndUser() {
 }
 
 function requireHairdresserAndAdmin() {
-    if (empty($_SESSION['user_id']) && empty($_SESSION['is_admin'])) {
-        // Redirect to login if none of the roles are authenticated
+    if (empty($_SESSION['hairdresser_id']) && (empty($_SESSION['user_id']) || empty($_SESSION['is_admin']))) {
         header("Location: /login");
         exit;
     }

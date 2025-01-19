@@ -34,7 +34,8 @@ class UserModel extends BaseModel
     public function getAll()
     {
         $sql = "SELECT * FROM users ORDER BY created_at DESC";
-        $stmt = self::$pdo->query($sql);
+        $stmt = self::$pdo->prepare($sql);
+        $stmt->execute();
         return $stmt->fetchAll();
     }
 

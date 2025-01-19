@@ -43,7 +43,8 @@ class HairdresserModel extends BaseModel
     public function getAll()
     {
         $sql = "SELECT * FROM hairdressers ORDER BY created_at DESC";
-        $stmt = self::$pdo->query($sql);
+        $stmt = self::$pdo->prepare($sql);
+        $stmt->execute();
         return $stmt->fetchAll();
     }
 
