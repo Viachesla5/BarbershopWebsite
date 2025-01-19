@@ -31,6 +31,8 @@ class AdminController
      ************************************************************/
     public function listUsers()
     {
+        // error_log("banana", 3, "logs/debug.log");
+
         requireAdmin();
         $users = $this->userModel->getAll();
         require(__DIR__ . '/../views/admin/users_list.php');

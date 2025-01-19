@@ -25,6 +25,24 @@ class AppointmentModel extends BaseModel
         return self::$pdo->lastInsertId();
     }
 
+    // NEW: Check if a given hairdresser/date/time is already booked
+    // Returns the appointment row if taken, or false if free
+    public function findByHairdresserDateTime($hairdresserId, $date, $time)
+    {
+        $sql = "SELECT * FROM appointments
+                WHERE hairdresser_id = :hairdresser_id
+                  AND appointment_date = :appointment_date
+                  AND appointment_time = :appointment_time
+                LIMIT 1";
+        $stmt = self::$pdo->prepare($sql);
+        $stmt->execute([
+            ':hairdresser_id' => $hairdresserId,
+            ':appointment_date' => $date,
+            ':appointment_time' => $time,
+        ]);
+        return $stmt->fetch(); // false if no row found
+    }
+
     // READ an appointment by ID
     public function getById($id)
     {
@@ -41,7 +59,6 @@ class AppointmentModel extends BaseModel
         $where = [];
         $params = [];
 
-        // If we want to filter by user_id or hairdresser_id
         if (isset($filters['user_id'])) {
             $where[] = "user_id = :user_id";
             $params[':user_id'] = $filters['user_id'];

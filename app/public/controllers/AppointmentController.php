@@ -3,6 +3,8 @@
 require_once(__DIR__ . "/../models/AppointmentModel.php");
 require_once(__DIR__ . "/../models/UserModel.php");
 require_once(__DIR__ . "/../models/HairdresserModel.php");
+// Import your Auth helpers so we can call requireUser(), etc.
+require_once(__DIR__ . "/../lib/Auth.php");
 
 class AppointmentController
 {
@@ -17,37 +19,37 @@ class AppointmentController
         $this->hairdresserModel = new HairdresserModel();
     }
 
+    /**
+     * Display a FullCalendar page for customers to create appointments.
+     * Only logged-in users can view this page.
+     */
     public function calendar()
     {
-        // Possibly require user or hairdresser or admin login
-        // requireUser(); // if you want only logged-in users
+        requireUser();  // Customers must be logged in
 
-        // Load the view that contains FullCalendar
+        // Show the calendar, where they can select a day/time
         require(__DIR__ . '/../views/appointments/calendar.php');
     }
 
-    // 2. Return JSON of existing appointments
+    /**
+     * Return JSON of existing appointments for FullCalendar.
+     * Optionally filter by hairdresser or user if you prefer.
+     */
     public function getCalendarEvents()
     {
-        // Retrieve appointments (for example, all future appointments or user-specific)
-        // Example: $appointments = $this->appointmentModel->getAllUpcoming();
-        $appointments = $this->appointmentModel->getAll(); // Replace with your own logic
+        requireUser();  // Must be logged in to see events (optional choice)
 
-        // Build FullCalendar event objects:
-        // FullCalendar expects [{ title, start, end }, ...]
-        // If you store date & time separately, you need to combine them
+        // Retrieve appointments. 
+        $appointments = $this->appointmentModel->getAll();
+
+        // Convert DB appointments into FullCalendar event objects
         $events = [];
         foreach ($appointments as $apt) {
-            // Example: apt['appointment_date'] + apt['appointment_time']
-            $start = $apt['appointment_date'] . 'T' . $apt['appointment_time']; 
-            // If you have an end time, or set a default 1 hour:
-            // $end = $apt['appointment_date'] . 'T' . calculateEndTime($apt['appointment_time']);
-            // For now, let's skip the end time or set it the same as start
+            $start = $apt['appointment_date'] . 'T' . $apt['appointment_time'];
             $events[] = [
                 'id'    => $apt['id'],
-                'title' => 'Apt #' . $apt['id'],  // or $apt['user_id'] or something else
+                'title' => 'Apt #' . $apt['id'] . ' (HD ' . $apt['hairdresser_id'] . ')', 
                 'start' => $start,
-                // 'end' => $end
             ];
         }
 
@@ -55,64 +57,83 @@ class AppointmentController
         echo json_encode($events);
     }
 
-    // 3. Create a new appointment from calendar selection
+    /**
+     * Create a new appointment from the calendar selection (AJAX).
+     * Real-world scenario: Only logged-in *customers* can do this.
+     */
     public function createFromCalendar()
     {
-        // Ensure user is logged in if needed
-        // requireUser();
 
-        // Read POST data (start date/time, maybe end date/time)
-        $start = $_POST['start'] ?? null; 
-        // $end = $_POST['end'] ?? null; // If you have an end
+        requireUser();  // Must be a logged-in user
 
-        // Convert $start into date/time fields or store as is
-        // Example: "2025-02-10T14:00:00"
-        if ($start) {
-            // parse date/time
-            $dateTime = explode('T', $start);
-            $date = $dateTime[0]; // e.g., "2025-02-10"
-            $time = $dateTime[1]; // e.g., "14:00:00"
+        header('Content-Type: application/json');
 
-            // Create the appointment record
-            $data = [
-                'user_id' => 1, // or $_SESSION['user_id'] if specific user
-                'hairdresser_id' => 2, // static or pass from form if needed
-                'appointment_date' => $date,
-                'appointment_time' => $time,
-                'status' => 'upcoming'
-            ];
-            $this->appointmentModel->create($data);
+        // We expect POST data: date, time, and hairdresser_id
+        $date = $_POST['date'] ?? null; 
+        $time = $_POST['time'] ?? null;
+        $hairdresserId = $_POST['hairdresser_id'] ?? null;
 
-            // Return success response
-            header('Content-Type: application/json');
-            echo json_encode(['success' => true, 'message' => 'Appointment created']);
+        // Get user ID from session
+        $userId = $_SESSION['user_id'];
+
+        // Validate
+        if (!$date || !$time || !$hairdresserId) {
+            echo json_encode(['success' => false, 'message' => 'Missing required fields.']);
             return;
         }
 
-        // If invalid data
-        header('Content-Type: application/json');
-        echo json_encode(['success' => false, 'message' => 'Invalid start time']);
+        // Check if that slot is already taken for that hairdresser
+        $existing = $this->appointmentModel->findByHairdresserDateTime($hairdresserId, $date, $time);
+        if ($existing) {
+            echo json_encode(['success' => false, 'message' => 'That time slot is already booked!']);
+            return;
+        }
+
+        // Create the appointment
+        $data = [
+            'user_id'         => $userId,
+            'hairdresser_id'  => $hairdresserId,
+            'appointment_date' => $date,
+            'appointment_time' => $time,
+            'status'           => 'upcoming'
+        ];
+        error_log(print_r($data, true), 3, "logs/debug.log");
+
+        $newId = $this->appointmentModel->create($data);
+
+
+        if ($newId) {
+            echo json_encode([
+                'success' => true,
+                'message' => 'Appointment created successfully.',
+                'appointment_id' => $newId
+            ]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Failed to create appointment.']);
+        }
     }
 
-
-
-    
+    /**
+     * Show a list of all appointments (for staff or admin).
+     * Example usage with requireHairdresser() or requireAdmin().
+     * Adjust based on your real-world scenario.
+     */
     public function listAll()
     {
-        requireHairdresser();
-
-        // Could show all appointments or filter by user/hairdresser
+        // Suppose only hairdressers can see *all* appointments
+        requireHairdresser(); 
         $appointments = $this->appointmentModel->getAll();
-        // Load a view to display them
         require(__DIR__ . "/../views/appointments/list.php");
     }
 
+    /**
+     * Create Appointment - (if staff can create them manually).
+     * Example usage: requireHairdresserAndUser() if you want staff or user only.
+     */
     public function createAppointment()
     {
-        requireHairdresserAndUser();
-
+        requireHairdresserAndUser(); 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // Handle creation
             $data = [
                 'user_id' => $_POST['user_id'],
                 'hairdresser_id' => $_POST['hairdresser_id'],
@@ -125,19 +146,19 @@ class AppointmentController
             exit;
         }
 
-        // -- GET REQUEST: Show form --
-        // 1. Fetch all users and hairdressers from DB
         $allUsers = $this->userModel->getAll();
         $allHairdressers = $this->hairdresserModel->getAll();
-
-        // 2. Pass them to the view
         require(__DIR__ . "/../views/appointments/create_form.php");
     }
 
+    /**
+     * Edit Appointment - staff usage or user usage depending on your rules
+     */
     public function editAppointment($id)
     {
+        requireHairdresser(); // e.g., only staff can edit
+
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // Handle update
             $data = [
                 'user_id'        => $_POST['user_id'],
                 'hairdresser_id' => $_POST['hairdresser_id'],
@@ -149,21 +170,21 @@ class AppointmentController
             header("Location: /appointments");
             exit;
         } else {
-            // -- GET REQUEST: Load existing data --
             $appointment = $this->appointmentModel->getById($id);
-
-            // Fetch all users and hairdressers for dropdowns
             $allUsers = $this->userModel->getAll();
             $allHairdressers = $this->hairdresserModel->getAll();
-
-            // Pass everything to edit_form.php
             require(__DIR__ . "/../views/appointments/edit_form.php");
         }
     }
 
+    /**
+     * Delete Appointment - staff usage or user usage depending on your rules
+     */
     public function deleteAppointment($id)
     {
+        requireHairdresser(); // or requireAdmin(), etc.
         $this->appointmentModel->delete($id);
-        // redirect or show confirmation
+        header("Location: /appointments");
+        exit;
     }
 }

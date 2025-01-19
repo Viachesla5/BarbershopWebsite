@@ -1,0 +1,48 @@
+Array
+(
+    [user_id] => 5
+    [hairdresser_id] => 1
+    [appointment_date] => 2025-01-08
+    [appointment_time] => 14:00
+    [status] => upcoming
+)
+Array
+(
+    [user_id] => 5
+    [hairdresser_id] => 7
+    [appointment_date] => 2025-01-09
+    [appointment_time] => 14:00
+    [status] => upcoming
+)
+Array
+(
+    [user_id] => 5
+    [hairdresser_id] => 7
+    [appointment_date] => 2025-01-02
+    [appointment_time] => 07:00
+    [status] => upcoming
+)
+Array
+(
+    [user_id] => 5
+    [hairdresser_id] => 7
+    [appointment_date] => 2025-01-02
+    [appointment_time] => 07:01
+    [status] => upcoming
+)
+Array
+(
+    [user_id] => 5
+    [hairdresser_id] => 8
+    [appointment_date] => 2025-01-02
+    [appointment_time] => 07:00
+    [status] => upcoming
+)
+Array
+(
+    [user_id] => 10
+    [hairdresser_id] => 7
+    [appointment_date] => 2025-01-02
+    [appointment_time] => 18:00
+    [status] => upcoming
+)
