@@ -120,4 +120,76 @@ class AppointmentController
         // Optionally pass $appointments to a list view
         require(__DIR__ . "/../views/appointments/list.php");
     }
+
+    /**
+     * NEW METHOD:
+     * Show a confirmation page to delete an appointment.
+     * (GET /appointments/delete/{id})
+     */
+    public function deleteConfirm($id)
+    {
+        requireHairdresser(); // or requireAdmin() if only admins can delete
+        $appointment = $this->appointmentModel->getById($id);
+
+        if (!$appointment) {
+            // No appointment found. Redirect or show error.
+            header("Location: /appointments");
+            exit;
+        }
+
+        // Pass appointment to view for a user-friendly message
+        require(__DIR__ . "/../views/appointments/delete_confirm.php");
+    }
+
+    /**
+     * NEW METHOD:
+     * Perform the actual deletion after confirmation.
+     * (POST /appointments/deleteConfirm/{id})
+     */
+    public function deleteAppointment($id)
+    {
+        requireHairdresser(); // or requireAdmin(), depending on your logic
+        $this->appointmentModel->delete($id);
+
+        // After deletion, redirect to the list or calendar
+        header("Location: /appointments");
+        exit;
+    }
+
+    /**
+     * Delete appointment from a FullCalendar click (AJAX).
+     * Route: POST /appointments/deleteFromCalendar
+     */
+    public function deleteFromCalendar()
+    {
+        requireUser(); // Ensure the user is logged in
+
+        header('Content-Type: application/json');
+
+        // Validate the 'id' field
+        $id = filter_var($_POST['id'] ?? null, FILTER_VALIDATE_INT);
+        if (!$id) {
+            echo json_encode(['success' => false, 'message' => 'Invalid appointment ID.']);
+            return;
+        }
+
+        // Fetch the appointment to verify it exists
+        $appointment = $this->appointmentModel->getById($id);
+
+        if (!$appointment) {
+            echo json_encode(['success' => false, 'message' => 'Appointment not found.']);
+            return;
+        }
+
+        // Ensure the logged-in user is the owner of the appointment
+        if ($appointment['user_id'] != $_SESSION['user_id']) {
+            echo json_encode(['success' => false, 'message' => 'Not authorized to delete this appointment.']);
+            return;
+        }
+
+        // Perform the delete
+        $this->appointmentModel->delete($id);
+
+        echo json_encode(['success' => true, 'message' => 'Appointment deleted successfully.']);
+    }
 }

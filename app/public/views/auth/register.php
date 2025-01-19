@@ -68,13 +68,6 @@
             <p class="text-gray-500 text-sm mt-1">Optional</p>
         </div>
 
-        <!-- Profile Picture -->
-        <div class="mb-4">
-            <label class="block mb-1 font-semibold" for="profile_picture">Profile Picture</label>
-            <input type="text" name="profile_picture" id="profile_picture" class="w-full border border-gray-300 px-3 py-2" placeholder="File path or URL">
-            <p class="text-gray-500 text-sm mt-1">Optional</p>
-        </div>
-
         <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
             Register
         </button>

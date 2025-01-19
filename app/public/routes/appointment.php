@@ -41,3 +41,22 @@ Route::add('/appointments/createFromCalendar', function() {
     $controller = new AppointmentController();
     $controller->createFromCalendar();
 }, 'post');
+
+
+// Route to display a confirmation page before deletion
+Route::add('/appointments/delete/([0-9]*)', function($id) {
+    $controller = new AppointmentController();
+    $controller->deleteConfirm($id);
+}, 'get');
+
+// Route to handle the actual deletion after confirmation
+Route::add('/appointments/deleteConfirm/([0-9]*)', function($id) {
+    $controller = new AppointmentController();
+    $controller->deleteAppointment($id);
+}, 'post');
+
+// Ajax route to delete appointment from FullCalendar
+Route::add('/appointments/deleteFromCalendar', function() {
+    $controller = new AppointmentController();
+    $controller->deleteFromCalendar();
+}, 'post');
