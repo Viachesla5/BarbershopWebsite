@@ -73,10 +73,10 @@ class AppointmentController
 
         header('Content-Type: application/json');
 
-        $date = $_POST['date'] ?? null; 
-        $time = $_POST['time'] ?? null;
-        $hairdresserId = $_POST['hairdresser_id'] ?? null;
-        $userId = $_SESSION['user_id'] ?? null;
+        $date = filter_var($_POST['date'], FILTER_SANITIZE_SPECIAL_CHARS) ?? null; 
+        $time = filter_var($_POST['time'], FILTER_SANITIZE_SPECIAL_CHARS) ?? null;
+        $hairdresserId = filter_var($_POST['hairdresser_id'], FILTER_SANITIZE_NUMBER_INT) ?? null;
+        $userId = filter_var($_SESSION['user_id'], FILTER_SANITIZE_NUMBER_INT) ?? null;
 
         // Validate fields
         if (!$date || !$time || !$hairdresserId || !$userId) {
@@ -120,65 +120,4 @@ class AppointmentController
         // Optionally pass $appointments to a list view
         require(__DIR__ . "/../views/appointments/list.php");
     }
-
-    /**
-     * Create Appointment - staff/manual creation
-     */
-    // public function createAppointment()
-    // {
-    //     requireHairdresserAndUser();
-    //     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    //         $data = [
-    //             'user_id' => $_POST['user_id'],
-    //             'hairdresser_id' => $_POST['hairdresser_id'],
-    //             'appointment_date' => $_POST['appointment_date'],
-    //             'appointment_time' => $_POST['appointment_time'],
-    //             'status' => 'upcoming'
-    //         ];
-    //         $newId = $this->appointmentModel->create($data);
-    //         header("Location: /appointments");
-    //         exit;
-    //     }
-
-    //     $allUsers = $this->userModel->getAll();
-    //     $allHairdressers = $this->hairdresserModel->getAll();
-    //     require(__DIR__ . "/../views/appointments/create_form.php");
-    // }
-
-    // /**
-    //  * Edit Appointment - staff usage
-    //  */
-    // public function editAppointment($id)
-    // {
-    //     requireHairdresser();
-
-    //     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    //         $data = [
-    //             'user_id'        => $_POST['user_id'],
-    //             'hairdresser_id' => $_POST['hairdresser_id'],
-    //             'appointment_date' => $_POST['appointment_date'],
-    //             'appointment_time' => $_POST['appointment_time'],
-    //             'status'         => $_POST['status']
-    //         ];
-    //         $this->appointmentModel->update($id, $data);
-    //         header("Location: /appointments");
-    //         exit;
-    //     } else {
-    //         $appointment = $this->appointmentModel->getById($id);
-    //         $allUsers = $this->userModel->getAll();
-    //         $allHairdressers = $this->hairdresserModel->getAll();
-    //         require(__DIR__ . "/../views/appointments/edit_form.php");
-    //     }
-    // }
-
-    // /**
-    //  * Delete Appointment - staff usage
-    //  */
-    // public function deleteAppointment($id)
-    // {
-    //     requireHairdresser();
-    //     $this->appointmentModel->delete($id);
-    //     header("Location: /appointments");
-    //     exit;
-    // }
 }

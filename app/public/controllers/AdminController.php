@@ -144,7 +144,7 @@ class AdminController
     public function deleteUser($id)
     {
         requireAdmin();
-        $this->userModel->delete($id);
+        $this->userModel->delete(filter_var($id, FILTER_VALIDATE_INT));
         header("Location: /admin/users");
         exit;
     }
@@ -180,14 +180,14 @@ class AdminController
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Gather form data
-            $email = $_POST['email'];
-            $name = $_POST['name'];
-            $password = password_hash($_POST['password'], PASSWORD_DEFAULT); // Hash the password
-            $specialization = $_POST['specialization'];
+            $email = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
+            $name = filter_var($_POST['name'], FILTER_SANITIZE_SPECIAL_CHARS);
+            $password = password_hash(filter_var($_POST['password'], FILTER_SANITIZE_SPECIAL_CHARS), PASSWORD_DEFAULT); // Hash the password
+            $specialization = filter_var($_POST['specialization'], FILTER_SANITIZE_SPECIAL_CHARS);
 
             // Optional fields
-            $phoneNumber = $_POST['phone_number'] ?? null;
-            $address = $_POST['address'] ?? null;
+            $phoneNumber = filter_var($_POST['phone_number'], FILTER_SANITIZE_NUMBER_INT) ?? null;
+            $address = filter_var($_POST['address'], FILTER_SANITIZE_SPECIAL_CHARS) ?? null;
             $profilePicture = $_POST['profile_picture'] ?? null;
 
             // Data array for creation
@@ -223,14 +223,14 @@ class AdminController
 
             // Gather form inputs and fallback to existing values if empty
             $data = [
-                'email'          => $_POST['email'] ?? $hd['email'],
-                'name'           => $_POST['name'] ?? $hd['name'],
-                'specialization' => $_POST['specialization'] ?? $hd['specialization'],
-                'phone_number'   => $_POST['phone_number'] ?? $hd['phone_number'],
-                'address'        => $_POST['address'] ?? $hd['address'],
+                'email'          => filter_var($_POST['email'], FILTER_SANITIZE_EMAIL) ?? $hd['email'],
+                'name'           => filter_var($_POST['name'], FILTER_SANITIZE_SPECIAL_CHARS) ?? $hd['name'],
+                'specialization' => filter_var($_POST['specialization'], FILTER_SANITIZE_SPECIAL_CHARS) ?? $hd['specialization'],
+                'phone_number'   => filter_var($_POST['phone_number'], FILTER_SANITIZE_NUMBER_INT) ?? $hd['phone_number'],
+                'address'        => filter_var($_POST['address'], FILTER_SANITIZE_SPECIAL_CHARS) ?? $hd['address'],
                 'profile_picture'=> $_POST['profile_picture'] ?? $hd['profile_picture'],
-                'password'       => !empty($_POST['password']) 
-                                        ? password_hash($_POST['password'], PASSWORD_DEFAULT) 
+                'password'       => !empty(filter_var($_POST['password'], FILTER_SANITIZE_SPECIAL_CHARS)) 
+                                        ? password_hash(filter_var($_POST['password'], FILTER_SANITIZE_SPECIAL_CHARS), PASSWORD_DEFAULT) 
                                         : $hd['password'] // Retain existing password if none provided
             ];
 
@@ -251,7 +251,7 @@ class AdminController
     public function deleteHairdresser($id)
     {
         requireAdmin();
-        $this->hairdresserModel->delete($id);
+        $this->hairdresserModel->delete(filter_var($id, FILTER_VALIDATE_INT));
         header("Location: /admin/hairdressers");
         exit;
     }

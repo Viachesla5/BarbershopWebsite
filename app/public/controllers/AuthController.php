@@ -23,8 +23,8 @@ class AuthController
             $email = trim($_POST['email'] ?? '');
             $password = $_POST['password'] ?? '';
 
-            $validator->validateEmail($email)
-                    ->validateRequired('password', $password, 'Password');
+            $validator->validateEmail($email);
+            $validator->validateRequired('password', $password, 'Password');
 
             if ($validator->hasErrors()) {
                 $errors = $validator->getErrors();

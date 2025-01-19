@@ -43,17 +43,17 @@ class ProfileController
         $successMsg = null;
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Gather form inputs (apply to either user or hairdresser)
-            $newEmail       = $_POST['email']          ?? $profileData['email']        ?? '';
-            $newUsername    = $_POST['username']       ?? $profileData['username']     ?? '';
-            $newPassword    = $_POST['new_password']   ?? '';
-            $newPhone       = $_POST['phone_number']   ?? $profileData['phone_number'] ?? '';
-            $newAddress     = $_POST['address']        ?? $profileData['address']      ?? '';
+            $newEmail       = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL)          ?? $profileData['email']        ?? '';
+            $newUsername    = filter_var($_POST['username'], FILTER_SANITIZE_SPECIAL_CHARS)       ?? $profileData['username']     ?? '';
+            $newPassword    = filter_var($_POST['new_password'], FILTER_SANITIZE_SPECIAL_CHARS)   ?? '';
+            $newPhone       = filter_var($_POST['phone_number'], FILTER_SANITIZE_NUMBER_INT)   ?? $profileData['phone_number'] ?? '';
+            $newAddress     = filter_var($_POST['address'], FILTER_SANITIZE_SPECIAL_CHARS)        ?? $profileData['address']      ?? '';
             $newPicture     = $_POST['profile_picture']?? $profileData['profile_picture'] ?? '';
 
             // If there's a "specialization" field in the form:
             // only honor it if not hairdresser
             if (isset($_POST['specialization']) && $role !== 'hairdresser') {
-                $newSpecialization = $_POST['specialization'];
+                $newSpecialization = filter_var($_POST['specialization'], FILTER_SANITIZE_SPECIAL_CHARS);
             } else {
                 // Keep old specialization for hairdressers or no specialization
                 $newSpecialization = $profileData['specialization'] ?? null;
