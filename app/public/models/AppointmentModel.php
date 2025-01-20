@@ -33,18 +33,6 @@ class AppointmentModel extends BaseModel
      */
     public function findByHairdresserDateTime($hairdresserId, $date, $time)
     {
-        // We'll parse $time into a MySQL-compatible time, then build a 30-min window
-        // e.g., if time = "07:00:00", disallow from 06:31:00 to 07:29:00
-        // For time calculations, we can rely on MySQL or do it in PHP. We'll do it in SQL for clarity.
-
-        // We want any appointment that overlaps in the 30 minute window:
-        // Let's define a range: [time - 29 minutes, time + 29 minutes]
-        // We'll assume times are HH:MM:SS format. We'll use MySQL's ADDTIME/SUBTIME or TIMESTAMPDIFF.
-
-        // Construct a query to find any appointment with the same date & hairdresser
-        // and the appointment_time is within 30 minutes of $time.
-        // This means: (ABS(TIMESTAMPDIFF(MINUTE, appointment_time, :time)) < 30)
-        // so if the difference in minutes is < 30, there's a conflict.
 
         $sql = "SELECT * FROM appointments
             WHERE hairdresser_id = :hairdresser_id
@@ -107,12 +95,6 @@ class AppointmentModel extends BaseModel
      */
     public function getAllWithNames()
     {
-        // We'll assume you have `users` table with 'username' or 'name' fields,
-        // and `hairdressers` table with a 'name' field.
-        // Example:
-        //   appointments (user_id, hairdresser_id, appointment_date, appointment_time...)
-        //   users        (id, username, ...)
-        //   hairdressers (id, name, ...)
 
         $sql = "SELECT 
                     a.*,

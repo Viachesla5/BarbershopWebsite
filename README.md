@@ -1,60 +1,69 @@
-# PHP Web Development Boilerplate
+# Web development 1 project
 
-## About
 
-This repo contains some starter code for new PHP projects.
+## Authors
 
-What's included:
+- [Viacheslav Onishchenko 704453]
 
-- Docker setup including:
-  - PHP interpreter
-  - NGINX server
-  - MySQL (MariaDB) database
-  - PHP MyAdmin
-- A directory structure organized around the MVC pattern
-- A locally included routing utility: [https://github.com/steampixel/simplePHPRouter](https://github.com/steampixel/simplePHPRouter)
-- Bootstrap JS and CSS included in the header: [https://getbootstrap.com/](https://getbootstrap.com/)
 
-## Usage
 
-- Start local
+## Login
 
-In a terminal, from the cloned/forked/download project folder, run:
+#### Admin account
 
-```bash
-docker compose up
-```
+login: artur@gmail.com \
+password: artur123
 
-NGINX will now serve files in the app/public folder. Visit localhost in your browser to check.
-PHPMyAdmin is accessible on localhost:8080
+#### User account
 
-If you want to stop the containers, press Ctrl+C.
+login: dima@gmail.com \
+password: dima123
 
-Or run:
+## SQL script
 
 ```bash
-docker compose down
+-- 1. USERS TABLE
+CREATE TABLE IF NOT EXISTS users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    username VARCHAR(50) NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    is_admin TINYINT(1) DEFAULT 0,
+    phone_number VARCHAR(50) DEFAULT NULL,
+    address VARCHAR(255) DEFAULT NULL,
+    profile_picture VARCHAR(255) DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 2. HAIRDRESSERS TABLE
+CREATE TABLE IF NOT EXISTS hairdressers (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    name VARCHAR(255) NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    phone_number VARCHAR(50) DEFAULT NULL,
+    address VARCHAR(255) DEFAULT NULL,
+    profile_picture VARCHAR(255) DEFAULT NULL,
+    specialization VARCHAR(255) DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 3. APPOINTMENTS TABLE
+CREATE TABLE IF NOT EXISTS appointments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    hairdresser_id INT NOT NULL,
+    appointment_date DATE NOT NULL,
+    appointment_time TIME NOT NULL,
+    status VARCHAR(50) DEFAULT 'upcoming',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (user_id) REFERENCES users(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+    FOREIGN KEY (hairdresser_id) REFERENCES hairdressers(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+);
+
 ```
-
-## Important files and directories
-
-_The directory that contains all relevant back end code is in the `app/public` directory. Files and directories listed below are relative to that folder._
-
-- `index.php` - this it the starting point of the application. Any URL requested that is not a direct link (i.e. to a CSS file, image asset, etc.) is is handled by this file. This file handles setup and loading the application routes. This is the starting point for any request.
-- `/routes` - this directory contains files which create route handlers. A route handler handles a specific URL route, i.e. [http://localhost/users](http://localhost/users), [http://localhost/user/1](http://localhost/user/1), etc. Typically a route handler will call a controller method to perform business logic and get data from the data (Model) layer.
-- `/controllers` - controllers should contain the logic of your application. They are also responsible for getting data from the model layer, performing logic and preparing data to be presented to the view layer.
-- `models` - models handle database CRUD operations.
-  - `models/BaseModel.php` - contains a base class for other models. Currently, the base class handles retrieving the database credentials from global `$_ENV` variables and creating a new PDO instance.
-  - `models/UserModel.php` - example model with dummy data for retrieving all users and a single user. This class contains commented out code to demonstrate use of the base model's PDO instance.
-- `view` - views handle the display layer of the application. They should not contain logic or direct database/model access.
-  - `view/pages` - organizing your front end code is important. This directory is for page-level templates.
-  - `view/partials` - you should break up your front end to small, modular pieces so they can be organized and reused. These small, reusable pieces of front the front end should be saved here.
-- `assets` - the assets directory should contain all the static public assets including CSS and JS files, images and other media.
-- `lib` - the lib directory contains reused modules and utility files.
-  - `lib/env.php` - defines global environment variables accessible throughout the application.
-  - `lib/error_reporting.php` - contains a small bit of startup code to enable error messages in the local environment.
-  - `lib/Route.php` - includes a routing utility class.
-
-## Good patterns
-
-For most layers of the application, it is a good idea to have a single file per entity type. I.e., currently there is a `routes/user.php` to handle user routes. If you add routes for products, adding it to `routes/product.php` would be a good idea. Similarly, there is a single file and class for the user controller and user model. New entities should generally get their own route, controller and model files.

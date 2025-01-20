@@ -90,5 +90,4 @@ class HairdresserModel extends BaseModel
         $stmt->execute([':email' => $email]);
         return $stmt->fetch(); // returns array or false if not found
     }
-    // Optionally add: getByName, etc.
 }

@@ -81,7 +81,6 @@ class AdminController
             }
 
             // 5. Address is optional, but let's limit to 200 chars
-            // Adjust as needed
             if (!empty($address)) {
                 $validator->validateMaxLength('address', $address, 200, 'Address');
             }

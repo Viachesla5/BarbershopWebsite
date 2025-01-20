@@ -120,4 +120,14 @@ class ProfileController
         // 4) Finally, load the profile view with $profileData, $role, and potential $successMsg or $errors
         require(__DIR__ . '/../views/profile/profile.php');
     }
+
+    public function showProfile($id)
+{
+    // 1. Get user data from DB
+    $user = $this->userModel->getById($id);
+
+    // 2. Pass user data to a view
+    require(__DIR__ . '/../views/profile/show.php');
+}
+
 }

@@ -161,6 +161,18 @@
         <?php endif; ?>
         -->
 
+        <div class="container mx-auto mt-8">
+
+            <!-- Use DB path for <img src=""> -->
+            <?php if (!empty($user['profile_picture'])): ?>
+                <img src="<?= htmlspecialchars($user['profile_picture'], ENT_QUOTES, 'UTF-8'); ?>" 
+                    alt="Profile Picture" 
+                    width="300">
+            <?php else: ?>
+                <p>No profile picture available.</p>
+            <?php endif; ?>
+        </div>
+
         <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
             Save Changes
         </button>

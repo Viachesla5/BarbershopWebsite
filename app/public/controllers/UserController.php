@@ -27,9 +27,4 @@ class UserController
         $user = $this->userModel->getById($id);
         require(__DIR__ . "/../views/pages/user.php");
     }
-
-    // (Optional) show user creation form, process creation, etc.
-    // public function create() { ... }
-    // public function update($id) { ... }
-    // public function delete($id) { ... }
 }
