@@ -89,4 +89,18 @@ class UserModel extends BaseModel
         $stmt->execute([':id' => $id]);
         return $stmt->rowCount();
     }
+    
+    public function updateProfilePicture($id, $filePath)
+    {
+        $sql = "UPDATE users 
+                SET profile_picture = :profile 
+                WHERE id = :id";
+        $stmt = self::$pdo->prepare($sql);
+        $stmt->execute([
+            ':profile' => $filePath,
+            ':id' => $id
+        ]);
+        return $stmt->rowCount();
+    }
+
 }

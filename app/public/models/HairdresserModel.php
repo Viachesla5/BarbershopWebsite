@@ -90,4 +90,18 @@ class HairdresserModel extends BaseModel
         $stmt->execute([':email' => $email]);
         return $stmt->fetch(); // returns array or false if not found
     }
+
+    public function updateProfilePicture($id, $filePath)
+    {
+        $sql = "UPDATE hairdressers 
+                SET profile_picture = :picture 
+                WHERE id = :id";
+        $stmt = self::$pdo->prepare($sql);
+        $stmt->execute([
+            ':picture' => $filePath,
+            ':id' => $id
+        ]);
+        return $stmt->rowCount();
+    }
+
 }

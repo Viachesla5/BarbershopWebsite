@@ -49,15 +49,15 @@
             <p><strong>Profile Picture:</strong></p>
             <img src="<?= htmlspecialchars($profileData['profile_picture'], ENT_QUOTES, 'UTF-8'); ?>"
                  alt="Profile Picture"
-                 class="w-32 h-32 object-cover rounded border">
+                 class="w-32 h-32 object-cover rounded border mb-2">
         <?php else: ?>
             <p><em>No profile picture.</em></p>
         <?php endif; ?>
     </div>
 
-    <!-- EDIT FORM -->
-    <form action="/profile" method="POST" class="max-w-md bg-white p-6 rounded shadow">
-        <h2 class="text-xl font-semibold mb-4">Edit Profile</h2>
+    <!-- EDIT FORM (Text fields) -->
+    <form action="/profile" method="POST" class="max-w-md bg-white p-6 rounded shadow mb-8">
+        <h2 class="text-xl font-semibold mb-4">Edit Profile (Text Fields)</h2>
 
         <!-- EMAIL -->
         <div class="mb-4">
@@ -133,20 +133,7 @@
             >
         </div>
 
-        <!-- PROFILE PICTURE (URL) -->
-        <div class="mb-4">
-            <label class="block mb-1 font-semibold" for="profile_picture">Profile Picture (URL)</label>
-            <input
-                type="text"
-                name="profile_picture"
-                id="profile_picture"
-                value="<?= htmlspecialchars($profileData['profile_picture'] ?? ''); ?>"
-                class="w-full border border-gray-300 rounded px-3 py-2"
-                placeholder="Enter an image URL or local file path"
-            >
-        </div>
-
-        <!-- HAIRDRESSER SPECIALIZATION (If you want to show a field for editing it) 
+        <!-- Optional Specialization if hairdresser -->
         <?php if ($role === 'hairdresser'): ?>
             <div class="mb-4">
                 <label class="block mb-1 font-semibold" for="specialization">Specialization</label>
@@ -159,24 +146,30 @@
                 >
             </div>
         <?php endif; ?>
-        -->
-
-        <div class="container mx-auto mt-8">
-
-            <!-- Use DB path for <img src=""> -->
-            <?php if (!empty($user['profile_picture'])): ?>
-                <img src="<?= htmlspecialchars($user['profile_picture'], ENT_QUOTES, 'UTF-8'); ?>" 
-                    alt="Profile Picture" 
-                    width="300">
-            <?php else: ?>
-                <p>No profile picture available.</p>
-            <?php endif; ?>
-        </div>
 
         <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
             Save Changes
         </button>
     </form>
+
+    <!-- FILE UPLOAD FORM (AJAX) -->
+    <div class="max-w-md bg-white p-6 rounded shadow">
+        <h2 class="text-xl font-semibold mb-4">Upload Profile Picture</h2>
+
+        <div class="mb-4">
+            <label class="block mb-1 font-semibold" for="profilePic">Choose a File</label>
+            <input type="file" id="profilePic" name="profilePic" accept="image/*" class="border border-gray-300 p-2">
+        </div>
+
+        <button id="uploadBtn" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+            Upload Picture
+        </button>
+
+        <div id="uploadMsg" class="mt-4 text-green-600"></div>
+    </div>
 </div>
+
+<!-- Include the JS for file uploads -->
+<script src="/assets/js/profile_upload.js"></script>
 
 <?php require(__DIR__ . '/../partials/footer.php'); ?>
