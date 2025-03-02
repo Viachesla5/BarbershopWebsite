@@ -66,4 +66,18 @@ CREATE TABLE IF NOT EXISTS appointments (
         ON UPDATE CASCADE
 );
 
+-- Insert demo users
+INSERT INTO users (email, username, password, phone_number, address, profile_picture, is_admin)
+VALUES
+('alice@example.com', 'alice', '$2y$10$HJ0AWiv8x.BAk47NHFz.h.v7lf7H6sY7O5WpAnJC8GVTKp67kmYOm', '1234567890', '123 Main St', NULL, 0),
+('bob@example.com', 'bob', '$2y$10$MdrNVPEaCt3cktuXRx.tH.LuCtaXfTNeCYQETcqFKv58QXYfjP7XO', '0987654321', '456 Oak St', '/uploads/bob.jpg', 0),
+('admin@example.com', 'admin', '$2y$10$gNfIBkCpkovvQXvbOf6Ww.3Y/tj5Q.HEy6ISwdTFkH1lCDuPVOOdW', '5555555555', 'Admin HQ', NULL, 1);
+
+-- Insert demo hairdressers
+INSERT INTO hairdressers (email, name, password, phone_number, address, profile_picture, specialization)
+VALUES
+('mary@example.com', 'Mary', '$2y$10$KK0AWiv8x.BAk47NHFz.h.v7lf7H6sY7O5WpAnJC8GVTKp67kmYOm', '1112223333', '789 Pine Ave', NULL, 'Coloring'),
+('dan@example.com', 'Daniel', '$2y$10$SdrNVPEaCt3cktuXRx.tH.LuCtaXfTNeCYQETcqFKv58QXYfjP7XO', '2223334444', '12th St, Suite 101', '/uploads/dan.png', 'Styling'),
+('emma@example.com', 'Emma', '$2y$10$gNfIBkCpkovvQXvbOf6Ww.3Y/tj5Q.HEy6ISwdTFkH1lCDuPVOOdW', '3334445555', 'Apt 12, Maple Rd', NULL, 'Haircutting');
+
 ```
