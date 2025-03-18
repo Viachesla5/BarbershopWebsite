@@ -1,65 +1,67 @@
 <?php require(__DIR__ . '/../partials/header.php'); ?>
 
-<div class="container mx-auto mt-8">
+<div class="container mx-auto mt-8 flex justify-center">
+    <!-- EDIT FORM (Combined) -->
+    <form id="profileForm" action="/profile" method="POST" class="w-full max-w-md bg-white p-6 rounded shadow">
+        <h2 class="text-2xl font-bold mb-6 text-center">
+            <?php if ($role === 'admin'): ?>
+                Admin Profile
+            <?php elseif ($role === 'hairdresser'): ?>
+                Hairdresser Profile
+            <?php else: ?>
+                User Profile
+            <?php endif; ?>
+        </h2>
 
-    <h1 class="text-2xl font-bold mb-4">
-        <?php if ($role === 'admin'): ?>
-            Admin Profile
-        <?php elseif ($role === 'hairdresser'): ?>
-            Hairdresser Profile
-        <?php else: ?>
-            User Profile
+        <!-- SHOW SUCCESS MESSAGE IF ANY -->
+        <?php if (!empty($successMsg)): ?>
+            <div class="mb-4 text-green-500 text-center">
+                <?= htmlspecialchars($successMsg); ?>
+            </div>
         <?php endif; ?>
-    </h1>
 
-    <!-- SHOW SUCCESS MESSAGE IF ANY -->
-    <?php if (!empty($successMsg)): ?>
-        <div class="mb-4 text-green-500">
-            <?= htmlspecialchars($successMsg); ?>
+        <!-- SHOW ERROR MESSAGES IF ANY -->
+        <?php if (!empty($errors)): ?>
+            <div class="mb-4 text-red-500">
+                <ul>
+                    <?php foreach ($errors as $err): ?>
+                        <li><?= htmlspecialchars($err, ENT_QUOTES, 'UTF-8'); ?></li>
+                    <?php endforeach; ?>
+                </ul>
+            </div>
+        <?php endif; ?>
+
+        <!-- Profile Picture Section -->
+        <div class="mb-8 text-center">
+            <label class="block mb-2 font-semibold">Profile Picture</label>
+            <div id="profilePictureContainer" class="mb-2 inline-block" onclick="document.getElementById('profile_picture').click();">
+                <?php if (!empty($profileData['profile_picture'])): ?>
+                    <div class="hover-trigger">
+                        <img src="<?= htmlspecialchars($profileData['profile_picture'], ENT_QUOTES, 'UTF-8'); ?>"
+                             alt="Current Profile Picture"
+                             class="w-32 h-32 object-cover rounded border">
+                        <div class="hover-overlay">
+                            <span class="text-white px-2 py-1 rounded bg-black bg-opacity-50">Click to change</span>
+                        </div>
+                    </div>
+                <?php else: ?>
+                    <div class="w-32 h-32 border-2 border-dashed border-gray-300 rounded flex items-center justify-center mx-auto hover:bg-gray-50 hover:border-gray-400 cursor-pointer transition-colors duration-200">
+                        <span class="text-gray-500 text-sm">Click to upload</span>
+                    </div>
+                <?php endif; ?>
+            </div>
+            <input
+                type="file"
+                name="profile_picture"
+                id="profile_picture"
+                accept="image/*"
+                class="hidden"
+            >
+            <p class="text-sm text-gray-500 mt-1">Supported formats: JPG, PNG, GIF (max 5MB)</p>
+            <div id="uploadStatus" class="mt-2 text-sm"></div>
         </div>
-    <?php endif; ?>
 
-    <!-- SHOW ERROR MESSAGES IF ANY -->
-    <?php if (!empty($errors)): ?>
-        <div class="mb-4 text-red-500">
-            <ul>
-                <?php foreach ($errors as $err): ?>
-                    <li><?= htmlspecialchars($err, ENT_QUOTES, 'UTF-8'); ?></li>
-                <?php endforeach; ?>
-            </ul>
-        </div>
-    <?php endif; ?>
-
-    <!-- CURRENT PROFILE INFO (READ-ONLY) -->
-    <div class="mb-8 bg-gray-100 p-4 rounded">
-        <p><strong>Email:</strong> <?= htmlspecialchars($profileData['email'] ?? ''); ?></p>
-
-        <?php if ($role === 'hairdresser'): ?>
-            <p><strong>Name:</strong> <?= htmlspecialchars($profileData['name'] ?? ''); ?></p>
-            <p><strong>Specialization:</strong> <?= htmlspecialchars($profileData['specialization'] ?? ''); ?></p>
-        <?php else: ?>
-            <p><strong>Username:</strong> <?= htmlspecialchars($profileData['username'] ?? ''); ?></p>
-        <?php endif; ?>
-
-        <p><strong>Phone:</strong> <?= htmlspecialchars($profileData['phone_number'] ?? ''); ?></p>
-        <p><strong>Address:</strong> <?= htmlspecialchars($profileData['address'] ?? ''); ?></p>
-
-        <!-- Display profile picture if exists -->
-        <?php if (!empty($profileData['profile_picture'])): ?>
-            <p><strong>Profile Picture:</strong></p>
-            <img src="<?= htmlspecialchars($profileData['profile_picture'], ENT_QUOTES, 'UTF-8'); ?>"
-                 alt="Profile Picture"
-                 class="w-32 h-32 object-cover rounded border mb-2">
-        <?php else: ?>
-            <p><em>No profile picture.</em></p>
-        <?php endif; ?>
-    </div>
-
-    <!-- EDIT FORM (Text fields) -->
-    <form action="/profile" method="POST" class="max-w-md bg-white p-6 rounded shadow mb-8">
-        <h2 class="text-xl font-semibold mb-4">Edit Profile (Text Fields)</h2>
-
-        <!-- EMAIL -->
+        <!-- Rest of the form fields -->
         <div class="mb-4">
             <label class="block mb-1 font-semibold" for="email">Email</label>
             <input 
@@ -147,29 +149,65 @@
             </div>
         <?php endif; ?>
 
-        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-            Save Changes
+        <button type="submit" class="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+            Save Profile Information
         </button>
     </form>
 
-    <!-- FILE UPLOAD FORM (AJAX) -->
-    <div class="max-w-md bg-white p-6 rounded shadow">
-        <h2 class="text-xl font-semibold mb-4">Upload Profile Picture</h2>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const profilePicInput = document.getElementById('profile_picture');
+        const uploadStatus = document.getElementById('uploadStatus');
+        const profilePictureContainer = document.getElementById('profilePictureContainer');
 
-        <div class="mb-4">
-            <label class="block mb-1 font-semibold" for="profilePic">Choose a File</label>
-            <input type="file" id="profilePic" name="profilePic" accept="image/*" class="border border-gray-300 p-2">
-        </div>
+        profilePicInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
 
-        <button id="uploadBtn" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
-            Upload Picture
-        </button>
+            const formData = new FormData();
+            formData.append('profilePic', file);
 
-        <div id="uploadMsg" class="mt-4 text-green-600"></div>
-    </div>
+            uploadStatus.textContent = 'Uploading...';
+            uploadStatus.className = 'mt-2 text-sm text-blue-600';
+
+            fetch('/profile/uploadPicture', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    uploadStatus.textContent = 'Upload successful!';
+                    uploadStatus.className = 'mt-2 text-sm text-green-600';
+                    
+                    // Update the profile picture preview with hover effect
+                    profilePictureContainer.innerHTML = `
+                        <div class="hover-trigger">
+                            <img src="${data.filePath}"
+                                 alt="Profile Picture"
+                                 class="w-32 h-32 object-cover rounded border">
+                            <div class="hover-overlay">
+                                <span class="text-white px-2 py-1 rounded bg-black bg-opacity-50">Click to change</span>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    uploadStatus.textContent = 'Upload failed: ' + data.message;
+                    uploadStatus.className = 'mt-2 text-sm text-red-600';
+                }
+            })
+            .catch(error => {
+                uploadStatus.textContent = 'Upload failed: ' + error.message;
+                uploadStatus.className = 'mt-2 text-sm text-red-600';
+            });
+        });
+
+        // Prevent form resubmission on page refresh
+        if (window.history.replaceState) {
+            window.history.replaceState(null, null, window.location.href);
+        }
+    });
+    </script>
 </div>
-
-<!-- Include the JS for file uploads -->
-<script src="/assets/js/profile_upload.js"></script>
 
 <?php require(__DIR__ . '/../partials/footer.php'); ?>

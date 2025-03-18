@@ -57,20 +57,26 @@ class HairdresserModel extends BaseModel
                     password = :password,
                     phone_number = :phone_number,
                     address = :address,
-                    profile_picture = :profile_picture,
-                    specialization = :specialization
-                WHERE id = :id";
-        $stmt = self::$pdo->prepare($sql);
-        $stmt->execute([
+                    specialization = :specialization";
+        
+        $params = [
             ':email' => $data['email'],
             ':name'  => $data['name'],
             ':password' => $data['password'],
             ':phone_number' => $data['phone_number'],
             ':address' => $data['address'],
-            ':profile_picture' => $data['profile_picture'],
             ':specialization' => $data['specialization'],
             ':id' => $id
-        ]);
+        ];
+
+        if (isset($data['profile_picture'])) {
+            $sql .= ", profile_picture = :profile_picture";
+            $params[':profile_picture'] = $data['profile_picture'];
+        }
+
+        $sql .= " WHERE id = :id";
+        $stmt = self::$pdo->prepare($sql);
+        $stmt->execute($params);
         return $stmt->rowCount();
     }
 

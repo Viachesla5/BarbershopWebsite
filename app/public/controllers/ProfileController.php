@@ -44,7 +44,7 @@ class ProfileController
         $errors = [];
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // textual profile updates – no file uploads
+            // Handle text fields
             $newEmail       = filter_var($_POST['email']          ?? '', FILTER_SANITIZE_EMAIL);
             $newUsername    = filter_var($_POST['username']       ?? '', FILTER_SANITIZE_SPECIAL_CHARS);
             $newPasswordRaw = filter_var($_POST['new_password']   ?? '', FILTER_SANITIZE_SPECIAL_CHARS);
@@ -104,12 +104,8 @@ class ProfileController
      */
     public function uploadPicture()
     {
-        requireUser();
+        requireProfileAccess();
 
-        // Clear any output buffer
-        while (ob_get_level()) {
-            ob_end_clean();
-        }
         header('Content-Type: application/json; charset=UTF-8');
 
         if (!isset($_FILES['profilePic']) || $_FILES['profilePic']['error'] !== UPLOAD_ERR_OK) {
@@ -118,41 +114,59 @@ class ProfileController
         }
 
         $file = $_FILES['profilePic'];
-        $allowedTypes = ['image/jpeg','image/png','image/gif'];
+        $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        $maxSize = 5 * 1024 * 1024; // 5MB
+
         if (!in_array($file['type'], $allowedTypes)) {
-            echo json_encode(['success' => false, 'message' => 'Invalid file type (only JPG, PNG, GIF).']);
+            echo json_encode(['success' => false, 'message' => 'Invalid file type. Only JPG, PNG, and GIF files are allowed.']);
             exit;
         }
 
-        // Move file to /public/uploads
-        $uploadDir = __DIR__ . '/../../public/uploads/';
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0775, true);
+        if ($file['size'] > $maxSize) {
+            echo json_encode(['success' => false, 'message' => 'File is too large. Maximum size is 5MB.']);
+            exit;
         }
-        $fileName = time() . '_' . basename($file['name']);
+
+        $uploadDir = __DIR__ . '/../uploads/profile_pictures/';
+        if (!file_exists($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+
+        $fileExtension = pathinfo($file['name'], PATHINFO_EXTENSION);
+        $fileName = uniqid() . '.' . $fileExtension;
         $targetPath = $uploadDir . $fileName;
+        $filePathInDB = '/uploads/profile_pictures/' . $fileName;
 
         if (!move_uploaded_file($file['tmp_name'], $targetPath)) {
             echo json_encode(['success' => false, 'message' => 'Failed to move uploaded file.']);
             exit;
         }
 
-        $filePathInDB = '/uploads/' . $fileName;
-
-        // Check if user is hairdresser or normal user
+        // Get current user's data to delete old picture
+        $currentUser = null;
         if (!empty($_SESSION['hairdresser_id'])) {
-            // hairdresser
-            $hdId = $_SESSION['hairdresser_id'];
-            $this->hairdresserModel->updateProfilePicture($hdId, $filePathInDB); 
+            $currentUser = $this->hairdresserModel->getById($_SESSION['hairdresser_id']);
+            if (!empty($currentUser['profile_picture'])) {
+                $oldPicturePath = __DIR__ . '/..' . $currentUser['profile_picture'];
+                if (file_exists($oldPicturePath)) {
+                    unlink($oldPicturePath);
+                }
+            }
+            $this->hairdresserModel->updateProfilePicture($_SESSION['hairdresser_id'], $filePathInDB);
         } else {
-            // user or admin
-            $userId = $_SESSION['user_id'];
-            $this->userModel->updateProfilePicture($userId, $filePathInDB); 
+            $currentUser = $this->userModel->getById($_SESSION['user_id']);
+            if (!empty($currentUser['profile_picture'])) {
+                $oldPicturePath = __DIR__ . '/..' . $currentUser['profile_picture'];
+                if (file_exists($oldPicturePath)) {
+                    unlink($oldPicturePath);
+                }
+            }
+            $this->userModel->updateProfilePicture($_SESSION['user_id'], $filePathInDB);
         }
 
         echo json_encode([
             'success' => true,
-            'message' => 'File uploaded successfully!',
+            'message' => 'Profile picture updated successfully!',
             'filePath' => $filePathInDB
         ]);
         exit;

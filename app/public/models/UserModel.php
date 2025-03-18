@@ -65,20 +65,26 @@ class UserModel extends BaseModel
                     password = :password,
                     phone_number = :phone_number,
                     address = :address,
-                    profile_picture = :profile_picture,
-                    is_admin = :is_admin
-                WHERE id = :id";
-        $stmt = self::$pdo->prepare($sql);
-        $stmt->execute([
+                    is_admin = :is_admin";
+        
+        $params = [
             ':email' => $data['email'],
             ':username' => $data['username'],
             ':password' => $data['password'],
             ':phone_number' => $data['phone_number'],
             ':address' => $data['address'],
-            ':profile_picture' => $data['profile_picture'],
             ':is_admin' => $data['is_admin'],
             ':id' => $id
-        ]);
+        ];
+
+        if (isset($data['profile_picture'])) {
+            $sql .= ", profile_picture = :profile_picture";
+            $params[':profile_picture'] = $data['profile_picture'];
+        }
+
+        $sql .= " WHERE id = :id";
+        $stmt = self::$pdo->prepare($sql);
+        $stmt->execute($params);
         return $stmt->rowCount();
     }
 

@@ -5,12 +5,44 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hairsalon</title>
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <script
-        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-    <link rel="stylesheet" href="/assets/css/style.css">
-    <script src="/assets/js/main.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    transitionProperty: {
+                        'opacity': 'opacity',
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom hover effects */
+        .hover-trigger {
+            position: relative;
+            cursor: pointer;
+        }
+        .hover-trigger img {
+            transition: opacity 0.2s ease-in-out;
+        }
+        .hover-trigger:hover img {
+            opacity: 0.75;
+        }
+        .hover-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+        }
+        .hover-trigger:hover .hover-overlay {
+            opacity: 1;
+        }
+    </style>
     <link rel="icon" type="image/png" href="/assets/images/favicon.png">
 </head>
 
