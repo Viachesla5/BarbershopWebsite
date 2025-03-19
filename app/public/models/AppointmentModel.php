@@ -14,8 +14,8 @@ class AppointmentModel extends BaseModel
      */
     public function create($data)
     {
-        $sql = "INSERT INTO appointments (user_id, hairdresser_id, appointment_date, appointment_time, status)
-                VALUES (:user_id, :hairdresser_id, :appointment_date, :appointment_time, :status)";
+        $sql = "INSERT INTO appointments (user_id, hairdresser_id, appointment_date, appointment_time, status, created_at)
+                VALUES (:user_id, :hairdresser_id, :appointment_date, :appointment_time, :status, NOW())";
         $stmt = self::$pdo->prepare($sql);
         $stmt->execute([
             ':user_id'        => $data['user_id'],
@@ -95,11 +95,11 @@ class AppointmentModel extends BaseModel
      */
     public function getAllWithNames()
     {
-
         $sql = "SELECT 
                     a.*,
                     u.username AS user_name,
-                    h.name AS hairdresser_name
+                    h.name AS hairdresser_name,
+                    a.created_at
                 FROM appointments a
                 JOIN users u ON a.user_id = u.id
                 JOIN hairdressers h ON a.hairdresser_id = h.id
@@ -131,6 +131,18 @@ class AppointmentModel extends BaseModel
             ':id'             => $id
         ]);
         return $stmt->rowCount();
+    }
+
+    /**
+     * Get recent appointments, ordered by creation date
+     */
+    public function getRecent($limit = 10)
+    {
+        $sql = "SELECT * FROM appointments ORDER BY created_at DESC LIMIT :limit";
+        $stmt = self::$pdo->prepare($sql);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll();
     }
 
     /**

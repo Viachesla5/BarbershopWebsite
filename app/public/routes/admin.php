@@ -29,6 +29,11 @@ Route::add('/admin/users/edit/([0-9]*)', function ($id) {
     $adminController->editUser($id);
 }, ['get', 'post']);
 
+Route::add('/admin/users/uploadPicture/([0-9]*)', function ($id) {
+    $adminController = new AdminController();
+    $adminController->uploadUserPicture($id);
+}, ['post']);
+
 Route::add('/admin/users/delete/([0-9]*)', function ($id) {
     $adminController = new AdminController();
     $adminController->deleteUser($id);
@@ -54,6 +59,11 @@ Route::add('/admin/hairdressers/edit/([0-9]*)', function ($id) {
     $adminController = new AdminController();
     $adminController->editHairdresser($id);
 }, ['get', 'post']);
+
+Route::add('/admin/hairdressers/uploadPicture/([0-9]*)', function ($id) {
+    $adminController = new AdminController();
+    $adminController->uploadHairdresserPicture($id);
+}, ['post']);
 
 Route::add('/admin/hairdressers/delete/([0-9]*)', function ($id) {
     $adminController = new AdminController();

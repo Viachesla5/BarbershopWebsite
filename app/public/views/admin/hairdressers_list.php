@@ -1,44 +1,43 @@
 <?php require(__DIR__ . '/../partials/header.php'); ?>
 
-<div class="container mx-auto mt-8">
-    <h1 class="text-2xl font-bold mb-4">Manage Hairdressers</h1>
-
-    <div class="mb-4">
-        <a href="/admin/hairdressers/create" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-            Create New Hairdresser
+<div class="container mx-auto mt-8 p-6">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-white">Manage Hairdressers</h1>
+        <a href="/admin/hairdressers/create" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition duration-200">
+            Add New Hairdresser
         </a>
     </div>
 
-    <?php if (!empty($hairdressers)): ?>
-        <div class="overflow-x-auto">
-            <table class="min-w-full bg-white border">
-                <thead>
-                    <tr class="bg-gray-100">
-                        <th class="py-2 px-4 border-b">Email</th>
-                        <th class="py-2 px-4 border-b">Name</th>
-                        <th class="py-2 px-4 border-b">Specialization</th>
-                        <th class="py-2 px-4 border-b">Actions</th>
+    <?php if (empty($hairdressers)) : ?>
+        <p class="text-gray-300">No hairdressers found.</p>
+    <?php else : ?>
+        <div class="bg-dark-100 rounded-lg shadow-lg overflow-x-auto">
+            <table class="min-w-full">
+                <thead class="bg-dark-200">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-200">ID</th>
+                        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-200">Name</th>
+                        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-200">Email</th>
+                        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-200">Specialization</th>
+                        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-200">Actions</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <?php foreach ($hairdressers as $h): ?>
-                        <tr>
-                            <td class="py-2 px-4 border-b"><?= htmlspecialchars($h['email']); ?></td>
-                            <td class="py-2 px-4 border-b"><?= htmlspecialchars($h['name']); ?></td>
-                            <td class="py-2 px-4 border-b"><?= htmlspecialchars($h['specialization']); ?></td>
-                            <td class="py-2 px-4 border-b text-center">
-                                <a href="/admin/hairdressers/show/<?= $h['id']; ?>" class="text-blue-500 hover:underline mr-2">Show</a>
-                                <a href="/admin/hairdressers/edit/<?= $h['id']; ?>" class="text-green-500 hover:underline mr-2">Edit</a>
-                                <a href="/admin/hairdressers/delete/<?= $h['id']; ?>" class="text-red-500 hover:underline"
-                                onclick="return confirm('Delete hairdresser?');">Delete</a>
+                <tbody class="divide-y divide-dark-50">
+                    <?php foreach ($hairdressers as $hairdresser) : ?>
+                        <tr class="hover:bg-dark-200 transition duration-150">
+                            <td class="px-6 py-4 text-sm text-gray-300"><?= $hairdresser['id'] ?></td>
+                            <td class="px-6 py-4 text-sm text-gray-300"><?= $hairdresser['name'] ?></td>
+                            <td class="px-6 py-4 text-sm text-gray-300"><?= $hairdresser['email'] ?></td>
+                            <td class="px-6 py-4 text-sm text-gray-300"><?= $hairdresser['specialization'] ?></td>
+                            <td class="px-6 py-4 text-sm space-x-3">
+                                <a href="/admin/hairdressers/edit/<?= $hairdresser['id'] ?>" class="text-blue-400 hover:text-blue-500">Edit</a>
+                                <a href="/admin/hairdressers/delete/<?= $hairdresser['id'] ?>" class="text-red-400 hover:text-red-500" onclick="return confirm('Are you sure you want to delete this hairdresser?')">Delete</a>
                             </td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
             </table>
         </div>
-    <?php else: ?>
-        <p>No hairdressers found.</p>
     <?php endif; ?>
 </div>
 

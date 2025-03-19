@@ -17,12 +17,39 @@ class AdminController
         $this->appointmentModel = new AppointmentModel();
     }
 
+    private function isAdmin()
+    {
+        return isset($_SESSION['user_id']) && isset($_SESSION['is_admin']) && $_SESSION['is_admin'] === 1;
+    }
+
     /************************************************************
      * ADMIN DASHBOARD
      ************************************************************/
     public function dashboard()
     {
         requireAdmin();
+
+        // Get total counts
+        $total_users = count($this->userModel->getAll());
+        $total_hairdressers = count($this->hairdresserModel->getAll());
+        $total_appointments = count($this->appointmentModel->getAll());
+
+        // Get recent activities (last 10 appointments)
+        $recent_appointments = $this->appointmentModel->getRecent(10);
+        $recent_activities = [];
+
+        foreach ($recent_appointments as $apt) {
+            $user = $this->userModel->getById($apt['user_id']);
+            $hairdresser = $this->hairdresserModel->getById($apt['hairdresser_id']);
+
+            $recent_activities[] = [
+                'date' => $apt['created_at'],
+                'description' => "Appointment scheduled with " . ($hairdresser['name'] ?? 'Unknown Hairdresser'),
+                'user' => $user['username'] ?? 'Unknown User',
+                'status' => $apt['status']
+            ];
+        }
+
         require(__DIR__ . '/../views/admin/dashboard.php');
     }
 
@@ -126,24 +153,108 @@ class AdminController
                             : $user['password'],
                 'phone_number' => $_POST['phone_number'] ?? $user['phone_number'],
                 'address' => $_POST['address'] ?? $user['address'],
-                'profile_picture' => $_POST['profile_picture'] ?? $user['profile_picture'],
+                'profile_picture' => $user['profile_picture'],
                 'is_admin' => !empty($_POST['is_admin']) ? 1 : 0
             ];
 
             $this->userModel->update($id, $data);
-
-            header("Location: /admin/users");
-            exit;
+            
+            // Fetch updated user data
+            $user = $this->userModel->getById($id);
+            $success = "User updated successfully!";
+            require(__DIR__ . '/../views/admin/user_edit_form.php');
+            return;
         } else {
             $user = $this->userModel->getById($id);
             require(__DIR__ . '/../views/admin/user_edit_form.php');
         }
     }
 
+    public function uploadUserPicture($id)
+    {
+        requireAdmin();
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+            return;
+        }
+
+        if (!isset($_FILES['profilePic'])) {
+            echo json_encode(['success' => false, 'message' => 'No file uploaded']);
+            return;
+        }
+
+        $file = $_FILES['profilePic'];
+        $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        $maxSize = 5 * 1024 * 1024; // 5MB
+
+        // Validate file type and size
+        if (!in_array($file['type'], $allowedTypes)) {
+            echo json_encode(['success' => false, 'message' => 'Invalid file type. Only JPG, PNG, and GIF are allowed.']);
+            return;
+        }
+
+        if ($file['size'] > $maxSize) {
+            echo json_encode(['success' => false, 'message' => 'File is too large. Maximum size is 5MB.']);
+            return;
+        }
+
+        // Create uploads directory if it doesn't exist
+        $uploadDir = __DIR__ . '/../uploads/profile_pictures/';
+        if (!file_exists($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+
+        // Get current user data to check for existing profile picture
+        $user = $this->userModel->getById($id);
+        
+        // Delete old profile picture if it exists
+        if (!empty($user['profile_picture'])) {
+            $oldFilePath = __DIR__ . '/..' . $user['profile_picture'];
+            if (file_exists($oldFilePath)) {
+                unlink($oldFilePath);
+            }
+        }
+
+        // Generate unique filename
+        $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+        $filename = uniqid('profile_') . '.' . $extension;
+        $filepath = $uploadDir . $filename;
+
+        // Move uploaded file
+        if (move_uploaded_file($file['tmp_name'], $filepath)) {
+            // Update user's profile picture in database
+            $user['profile_picture'] = '/uploads/profile_pictures/' . $filename;
+            $this->userModel->update($id, $user);
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Profile picture uploaded successfully',
+                'filePath' => $user['profile_picture']
+            ]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Failed to upload file']);
+        }
+    }
+
     public function deleteUser($id)
     {
         requireAdmin();
+        
+        // Get user data before deletion to check for profile picture
+        $user = $this->userModel->getById($id);
+        
+        // Delete profile picture if it exists
+        if (!empty($user['profile_picture'])) {
+            $picturePath = __DIR__ . '/..' . $user['profile_picture'];
+            if (file_exists($picturePath)) {
+                unlink($picturePath);
+            }
+        }
+        
+        // Delete user from database
         $this->userModel->delete(filter_var($id, FILTER_VALIDATE_INT));
+        
         header("Location: /admin/users");
         exit;
     }
@@ -217,39 +328,122 @@ class AdminController
         requireAdmin();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // Fetch existing data
-            $hd = $this->hairdresserModel->getById($id);
+            $hairdresser = $this->hairdresserModel->getById($id);
 
-            // Gather form inputs and fallback to existing values if empty
             $data = [
-                'email'          => filter_var($_POST['email'], FILTER_SANITIZE_EMAIL) ?? $hd['email'],
-                'name'           => filter_var($_POST['name'], FILTER_SANITIZE_SPECIAL_CHARS) ?? $hd['name'],
-                'specialization' => filter_var($_POST['specialization'], FILTER_SANITIZE_SPECIAL_CHARS) ?? $hd['specialization'],
-                'phone_number'   => filter_var($_POST['phone_number'], FILTER_SANITIZE_NUMBER_INT) ?? $hd['phone_number'],
-                'address'        => filter_var($_POST['address'], FILTER_SANITIZE_SPECIAL_CHARS) ?? $hd['address'],
-                'profile_picture'=> $_POST['profile_picture'] ?? $hd['profile_picture'],
-                'password'       => !empty(filter_var($_POST['password'], FILTER_SANITIZE_SPECIAL_CHARS)) 
-                                        ? password_hash(filter_var($_POST['password'], FILTER_SANITIZE_SPECIAL_CHARS), PASSWORD_DEFAULT) 
-                                        : $hd['password'] // Retain existing password if none provided
+                'email' => $_POST['email'],
+                'name' => $_POST['name'],
+                'password' => !empty($_POST['password']) 
+                            ? password_hash($_POST['password'], PASSWORD_DEFAULT) 
+                            : $hairdresser['password'],
+                'phone_number' => $_POST['phone_number'] ?? $hairdresser['phone_number'],
+                'address' => $_POST['address'] ?? $hairdresser['address'],
+                'specialization' => $_POST['specialization'] ?? $hairdresser['specialization'],
+                'profile_picture' => $hairdresser['profile_picture'] // Keep existing profile picture
             ];
 
-            // Update hairdresser in the database
             $this->hairdresserModel->update($id, $data);
-
-            // Redirect back to the hairdresser list
-            header("Location: /admin/hairdressers");
-            exit;
+            
+            // Fetch updated hairdresser data
+            $hairdresser = $this->hairdresserModel->getById($id);
+            $success = "Hairdresser updated successfully!";
+            require(__DIR__ . '/../views/admin/hairdresser_edit_form.php');
+            return;
         } else {
-            // GET request - load the form with existing data
             $hairdresser = $this->hairdresserModel->getById($id);
             require(__DIR__ . '/../views/admin/hairdresser_edit_form.php');
         }
     }
 
+    public function uploadHairdresserPicture($id)
+    {
+        requireAdmin();
+
+        // Check if it's a POST request
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+            return;
+        }
+
+        if (!isset($_FILES['profilePic']) || $_FILES['profilePic']['error'] !== UPLOAD_ERR_OK) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'No file uploaded or upload error']);
+            return;
+        }
+
+        $file = $_FILES['profilePic'];
+        
+        // Validate file type
+        $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        if (!in_array($file['type'], $allowedTypes)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Invalid file type. Only JPG, PNG and GIF are allowed.']);
+            return;
+        }
+
+        // Validate file size (5MB max)
+        $maxSize = 5 * 1024 * 1024; // 5MB in bytes
+        if ($file['size'] > $maxSize) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'File too large. Maximum size is 5MB.']);
+            return;
+        }
+
+        // Create uploads directory if it doesn't exist
+        $uploadDir = __DIR__ . '/../uploads/hairdressers';
+        if (!file_exists($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+
+        // Get current hairdresser data to check for existing profile picture
+        $hairdresser = $this->hairdresserModel->getById($id);
+        
+        // Delete old profile picture if it exists
+        if (!empty($hairdresser['profile_picture'])) {
+            $oldFilePath = __DIR__ . '/..' . $hairdresser['profile_picture'];
+            if (file_exists($oldFilePath)) {
+                unlink($oldFilePath);
+            }
+        }
+
+        // Generate unique filename
+        $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+        $filename = uniqid('hairdresser_' . $id . '_') . '.' . $extension;
+        $filepath = $uploadDir . '/' . $filename;
+
+        // Move uploaded file
+        if (move_uploaded_file($file['tmp_name'], $filepath)) {
+            // Update hairdresser's profile picture in database
+            $hairdresser['profile_picture'] = '/uploads/hairdressers/' . $filename;
+            $this->hairdresserModel->update($id, $hairdresser);
+
+            echo json_encode([
+                'success' => true,
+                'filePath' => $hairdresser['profile_picture']
+            ]);
+        } else {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Failed to upload file']);
+        }
+    }
 
     public function deleteHairdresser($id)
     {
         requireAdmin();
+        
+        // Get hairdresser data before deletion to check for profile picture
+        $hairdresser = $this->hairdresserModel->getById($id);
+        
+        // Delete profile picture if it exists
+        if (!empty($hairdresser['profile_picture'])) {
+            $picturePath = __DIR__ . '/..' . $hairdresser['profile_picture'];
+            if (file_exists($picturePath)) {
+                unlink($picturePath);
+            }
+        }
+        
+        // Delete hairdresser from database
         $this->hairdresserModel->delete(filter_var($id, FILTER_VALIDATE_INT));
         header("Location: /admin/hairdressers");
         exit;

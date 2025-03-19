@@ -1,49 +1,47 @@
 <?php require(__DIR__ . '/../partials/header.php'); ?>
 
-<div class="container mx-auto mt-8">
-    <h1 class="text-2xl font-bold mb-4">Manage Users</h1>
-
-    <div class="mb-4">
-        <a href="/admin/users/create" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-            Create New User
+<div class="container mx-auto mt-8 p-6">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-white">Manage Users</h1>
+        <a href="/admin/users/create" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition duration-200">
+            Add New User
         </a>
     </div>
 
-    <?php if (!empty($users)): ?>
-        <div class="overflow-x-auto">
-            <table class="min-w-full bg-white border">
-                <thead>
-                    <tr class="bg-gray-100">
-                        <th class="py-2 px-4 border-b">ID</th>
-                        <th class="py-2 px-4 border-b">Email</th>
-                        <th class="py-2 px-4 border-b">Username</th>
-                        <th class="py-2 px-4 border-b">Is Admin</th>
-                        <th class="py-2 px-4 border-b">Actions</th>
+    <?php if (empty($users)) : ?>
+        <p class="text-gray-300">No users found.</p>
+    <?php else : ?>
+        <div class="bg-dark-100 rounded-lg shadow-lg overflow-x-auto">
+            <table class="min-w-full">
+                <thead class="bg-dark-200">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-200">ID</th>
+                        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-200">Username</th>
+                        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-200">Email</th>
+                        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-200">Role</th>
+                        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-200">Actions</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <?php foreach ($users as $u): ?>
-                        <tr>
-                            <td class="py-2 px-4 border-b text-center"><?= htmlspecialchars($u['id']); ?></td>
-                            <td class="py-2 px-4 border-b"><?= htmlspecialchars($u['email']); ?></td>
-                            <td class="py-2 px-4 border-b"><?= htmlspecialchars($u['username']); ?></td>
-                            <td class="py-2 px-4 border-b text-center"><?= $u['is_admin'] ? 'Yes' : 'No'; ?></td>
-                            <td class="py-2 px-4 border-b text-center">
-                                <!-- For editing user details or toggling admin, etc. -->
-                                <a href="/admin/users/show/<?= $u['id']; ?>" class="text-blue-500 hover:underline mr-2">Show</a>
-                                <a href="/admin/users/edit/<?= $u['id']; ?>" class="text-green-500 hover:underline mr-2">Edit</a>
-                                <a href="/admin/users/delete/<?= $u['id']; ?>" class="text-red-500 hover:underline"
-                                   onclick="return confirm('Are you sure you want to delete this user?');">
-                                   Delete
-                                </a>
+                <tbody class="divide-y divide-dark-50">
+                    <?php foreach ($users as $user) : ?>
+                        <tr class="hover:bg-dark-200 transition duration-150">
+                            <td class="px-6 py-4 text-sm text-gray-300"><?= $user['id'] ?></td>
+                            <td class="px-6 py-4 text-sm text-gray-300"><?= $user['username'] ?></td>
+                            <td class="px-6 py-4 text-sm text-gray-300"><?= $user['email'] ?></td>
+                            <td class="px-6 py-4 text-sm">
+                                <span class="<?= $user['is_admin'] ? 'bg-purple-500' : 'bg-blue-500' ?> text-white px-2 py-1 rounded text-xs">
+                                    <?= $user['is_admin'] ? 'Admin' : 'User' ?>
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-sm space-x-3">
+                                <a href="/admin/users/edit/<?= $user['id'] ?>" class="text-blue-400 hover:text-blue-500">Edit</a>
+                                <a href="/admin/users/delete/<?= $user['id'] ?>" class="text-red-400 hover:text-red-500" onclick="return confirm('Are you sure you want to delete this user?')">Delete</a>
                             </td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
             </table>
         </div>
-    <?php else: ?>
-        <p>No users found.</p>
     <?php endif; ?>
 </div>
 
