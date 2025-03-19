@@ -8,7 +8,7 @@
             <div class="space-y-4">
                 <p class="text-gray-300">
                     <strong class="text-gray-200">ID:</strong> 
-                    <?= htmlspecialchars($hairdresser['id']); ?>
+                    <?= htmlspecialchars((string)$hairdresser['id']); ?>
                 </p>
                 <p class="text-gray-300">
                     <strong class="text-gray-200">Email:</strong> 
@@ -20,11 +20,11 @@
                 </p>
                 <p class="text-gray-300">
                     <strong class="text-gray-200">Phone:</strong> 
-                    <?= htmlspecialchars($hairdresser['phone_number']); ?>
+                    <?= htmlspecialchars($hairdresser['phone_number'] ?? 'Not provided'); ?>
                 </p>
                 <p class="text-gray-300">
                     <strong class="text-gray-200">Address:</strong> 
-                    <?= htmlspecialchars($hairdresser['address']); ?>
+                    <?= htmlspecialchars($hairdresser['address'] ?? 'Not provided'); ?>
                 </p>
                 <p class="text-gray-300">
                     <strong class="text-gray-200">Specialization:</strong> 
@@ -34,7 +34,7 @@
 
             <?php if (!empty($hairdresser['profile_picture'])): ?>
                 <div class="mt-6">
-                    <img src="/path/to/uploads/<?= htmlspecialchars($hairdresser['profile_picture']); ?>" 
+                    <img src="<?= htmlspecialchars($hairdresser['profile_picture']); ?>" 
                          alt="Profile Picture" 
                          class="w-32 h-32 object-cover rounded border border-dark-50">
                 </div>

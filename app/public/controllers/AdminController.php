@@ -3,6 +3,7 @@ require_once(__DIR__ . '/../lib/Validator.php');
 require_once(__DIR__ . '/../models/UserModel.php');
 require_once(__DIR__ . '/../models/HairdresserModel.php');
 require_once(__DIR__ . '/../models/AppointmentModel.php');
+require_once(__DIR__ . '/../lib/Security.php');
 
 class AdminController
 {
@@ -81,58 +82,74 @@ class AdminController
         requireAdmin();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $validator = new Validator();
+            try {
+                $security = Security::getInstance();
+                
+                // Validate CSRF token
+                $security->validateCSRFToken($_POST['csrf_token'] ?? '');
+                
+                // Check rate limit
+                $security->checkRateLimit('create_user', $_SERVER['REMOTE_ADDR']);
 
-            $email          = trim($_POST['email'] ?? '');
-            $username       = trim($_POST['username'] ?? '');
-            $password       = $_POST['password'] ?? '';
-            $phoneNumber    = trim($_POST['phone_number'] ?? '');
-            $address        = trim($_POST['address'] ?? '');
-            $profilePicture = trim($_POST['profile_picture'] ?? '');
-            $isAdminInput   = $_POST['is_admin'] ?? null;
+                // Sanitize inputs
+                $email = $security->sanitizeInput($_POST['email'] ?? '');
+                $username = $security->sanitizeInput($_POST['username'] ?? '');
+                $password = $_POST['password'] ?? ''; // Don't sanitize password
+                $phoneNumber = $security->sanitizeInput($_POST['phone_number'] ?? '');
+                $address = $security->sanitizeInput($_POST['address'] ?? '');
+                $isAdminInput = isset($_POST['is_admin']) ? 1 : 0;
 
-            // Validations using your Validator helper
+                $validator = new Validator();
 
-            // 1. Email must be valid
-            $validator->validateEmail($email);
+                // Check if email already exists in users table
+                if ($this->userModel->getByEmail($email)) {
+                    throw new Exception('Email address is already registered');
+                }
 
-            // 2. Username must be at least 3 chars
-            $validator->validateUsername($username, 3);
+                // Check if email already exists in hairdressers table
+                if ($this->hairdresserModel->getByEmail($email)) {
+                    throw new Exception('Email address is already registered');
+                }
 
-            // 3. Password must be at least 6 chars
-            $validator->validatePassword($password, 6);
+                // Validate email format
+                $validator->validateEmail($email);
 
-            // 4. Phone number is optional, but if provided, must contain only digits
-            if (!empty($phoneNumber)) {
-                $validator->validatePhoneNumber($phoneNumber);
-            }
+                // Username must be at least 3 chars
+                $validator->validateUsername($username, 3);
 
-            // 5. Address is optional, but let's limit to 200 chars
-            if (!empty($address)) {
-                $validator->validateMaxLength('address', $address, 200, 'Address');
-            }
+                // Validate password strength
+                $security->validatePasswordStrength($password);
 
-            // Check for errors
-            if ($validator->hasErrors()) {
-                $errors = $validator->getErrors();
-                require(__DIR__ . '/../views/auth/register.php');
+                // Phone number is optional, but if provided, must contain only digits
+                if (!empty($phoneNumber)) {
+                    $validator->validatePhoneNumber($phoneNumber);
+                }
+
+                // Address is optional, but let's limit to 200 chars
+                if (!empty($address)) {
+                    $validator->validateMaxLength('address', $address, 200, 'Address');
+                }
+
+                // If we get here, all validations passed
+                $data = [
+                    'email' => $email,
+                    'username' => $username,
+                    'password' => password_hash($password, PASSWORD_DEFAULT),
+                    'phone_number' => $phoneNumber ?: null,
+                    'address' => $address ?: null,
+                    'profile_picture' => null,
+                    'is_admin' => $isAdminInput
+                ];
+
+                $this->userModel->create($data);
+                header("Location: /admin/users");
+                exit;
+
+            } catch (Exception $e) {
+                $errors = [$e->getMessage()];
+                require(__DIR__ . '/../views/admin/user_create_form.php');
                 return;
             }
-
-            $data = [
-                'email' => $_POST['email'],
-                'username' => $_POST['username'],
-                'password' => password_hash($_POST['password'], PASSWORD_DEFAULT),
-                'phone_number' => $_POST['phone_number'] ?? null,
-                'address' => $_POST['address'] ?? null,
-                'profile_picture' => $_POST['profile_picture'] ?? null,
-                'is_admin' => !empty($_POST['is_admin']) ? 1 : 0
-            ];
-
-            $this->userModel->create($data);
-
-            header("Location: /admin/users");
-            exit;
         } else {
             require(__DIR__ . '/../views/admin/user_create_form.php');
         }
@@ -286,39 +303,85 @@ class AdminController
 
     public function createHairdresser()
     {
-        requireAdmin(); // Ensure only admins can access
+        requireAdmin();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // Gather form data
-            $email = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
-            $name = filter_var($_POST['name'], FILTER_SANITIZE_SPECIAL_CHARS);
-            $password = password_hash(filter_var($_POST['password'], FILTER_SANITIZE_SPECIAL_CHARS), PASSWORD_DEFAULT); // Hash the password
-            $specialization = filter_var($_POST['specialization'], FILTER_SANITIZE_SPECIAL_CHARS);
+            try {
+                $security = Security::getInstance();
+                
+                // Validate CSRF token
+                $security->validateCSRFToken($_POST['csrf_token'] ?? '');
+                
+                // Check rate limit
+                $security->checkRateLimit('create_hairdresser', $_SERVER['REMOTE_ADDR']);
 
-            // Optional fields
-            $phoneNumber = filter_var($_POST['phone_number'], FILTER_SANITIZE_NUMBER_INT) ?? null;
-            $address = filter_var($_POST['address'], FILTER_SANITIZE_SPECIAL_CHARS) ?? null;
-            $profilePicture = $_POST['profile_picture'] ?? null;
+                // Sanitize inputs
+                $email = $security->sanitizeInput($_POST['email'] ?? '');
+                $name = $security->sanitizeInput($_POST['name'] ?? '');
+                $password = $_POST['password'] ?? ''; // Don't sanitize password
+                $specialization = $security->sanitizeInput($_POST['specialization'] ?? '');
+                $phoneNumber = $security->sanitizeInput($_POST['phone_number'] ?? '');
+                $address = $security->sanitizeInput($_POST['address'] ?? '');
 
-            // Data array for creation
-            $data = [
-                'email' => $email,
-                'name' => $name,
-                'password' => $password,
-                'specialization' => $specialization,
-                'phone_number' => $phoneNumber,
-                'address' => $address,
-                'profile_picture' => $profilePicture
-            ];
+                $validator = new Validator();
 
-            // Create the hairdresser using the model
-            $this->hairdresserModel->create($data);
+                // Check if email already exists in hairdressers table
+                if ($this->hairdresserModel->getByEmail($email)) {
+                    throw new Exception('Email address is already registered');
+                }
 
-            // Redirect back to the hairdresser list
-            header("Location: /admin/hairdressers");
-            exit;
+                // Check if email already exists in users table
+                if ($this->userModel->getByEmail($email)) {
+                    throw new Exception('Email address is already registered');
+                }
+
+                // Validate email format
+                $validator->validateEmail($email);
+
+                // Name must be at least 2 chars
+                if (strlen($name) < 2) {
+                    throw new Exception('Name must be at least 2 characters long');
+                }
+
+                // Validate password strength
+                $security->validatePasswordStrength($password);
+
+                // Specialization is required and must be at least 3 chars
+                if (strlen($specialization) < 3) {
+                    throw new Exception('Specialization must be at least 3 characters long');
+                }
+
+                // Phone number is optional, but if provided, must contain only digits
+                if (!empty($phoneNumber)) {
+                    $validator->validatePhoneNumber($phoneNumber);
+                }
+
+                // Address is optional, but let's limit to 200 chars
+                if (!empty($address)) {
+                    $validator->validateMaxLength('address', $address, 200, 'Address');
+                }
+
+                // If we get here, all validations passed
+                $data = [
+                    'email' => $email,
+                    'name' => $name,
+                    'password' => password_hash($password, PASSWORD_DEFAULT),
+                    'specialization' => $specialization,
+                    'phone_number' => $phoneNumber ?: null,
+                    'address' => $address ?: null,
+                    'profile_picture' => null
+                ];
+
+                $this->hairdresserModel->create($data);
+                header("Location: /admin/hairdressers");
+                exit;
+
+            } catch (Exception $e) {
+                $errors = [$e->getMessage()];
+                require(__DIR__ . '/../views/admin/hairdresser_create_form.php');
+                return;
+            }
         } else {
-            // GET request: Show the create form
             require(__DIR__ . '/../views/admin/hairdresser_create_form.php');
         }
     }

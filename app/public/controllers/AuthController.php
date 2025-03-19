@@ -2,14 +2,17 @@
 require_once(__DIR__ . '/../lib/Validator.php');
 require_once(__DIR__ . "/../models/UserModel.php");
 require_once(__DIR__ . "/../models/HairdresserModel.php");
+require_once(__DIR__ . '/../lib/Security.php');
+require_once(__DIR__ . '/../models/BaseModel.php');
 
-class AuthController
+class AuthController extends BaseModel
 {
     private $userModel;
     private $hairdresserModel;
 
     public function __construct()
     {
+        parent::__construct();
         $this->userModel = new UserModel();
         $this->hairdresserModel = new HairdresserModel();
     }
@@ -60,68 +63,96 @@ class AuthController
     // Show the register form (GET) or handle registration (POST)
     public function register()
     {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $validator = new Validator();
-
-            $email          = trim($_POST['email'] ?? '');
-            $username       = trim($_POST['username'] ?? '');
-            $password       = $_POST['password'] ?? '';
-            $phoneNumber    = trim($_POST['phone_number'] ?? '');
-            $address        = trim($_POST['address'] ?? '');
-            $profilePicture = trim($_POST['profile_picture'] ?? '');
-            $isAdminInput   = $_POST['is_admin'] ?? null;
-
-            // Validations using your Validator helper
-
-            // 1. Email must be valid
-            $validator->validateEmail($email);
-
-            // 2. Username must be at least 3 chars
-            $validator->validateUsername($username, 3);
-
-            // 3. Password must be at least 6 chars
-            $validator->validatePassword($password, 6);
-
-            // 4. Phone number is optional, but if provided, must contain only digits
-            if (!empty($phoneNumber)) {
-                $validator->validatePhoneNumber($phoneNumber);
-            }
-
-            // 5. Address is optional, but let's limit to 200 chars
-            // Adjust as needed
-            if (!empty($address)) {
-                $validator->validateMaxLength('address', $address, 200, 'Address');
-            }
-
-            // Check for errors
-            if ($validator->hasErrors()) {
-                $errors = $validator->getErrors();
-                require(__DIR__ . '/../views/auth/register.php');
-                return;
-            }
-
-            // Hash the password
-            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-
-            // Insert into users table only
-            $data = [
-                'email'    => $email,
-                'username' => $username,
-                'password' => $hashedPassword,
-                'phone_number' => $_POST['phone_number'] ?? null,
-                'address' => $_POST['address'] ?? null,
-                'profile_picture' => $_POST['profile_picture'] ?? null,
-                'is_admin' => !empty($_POST['is_admin']) ? 1 : 0
-            ];
-            $this->userModel->create($data);
-
-            // Possibly auto-login or just redirect to login page
-            header("Location: /login");
-            exit;
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            $this->render('auth/register');
+            return;
         }
 
-        // If GET, load the registration form
-        require(__DIR__ . "/../views/auth/register.php");
+        $security = Security::getInstance();
+        $errors = [];
+
+        try {
+            // Validate CSRF token
+            if (!$security->validateCSRFToken($_POST['csrf_token'] ?? '')) {
+                throw new Exception('Invalid security token. Please try again.');
+            }
+
+            // Check rate limit
+            if (!$security->checkRateLimit('register', $_SERVER['REMOTE_ADDR'])) {
+                throw new Exception('Too many registration attempts. Please try again later.');
+            }
+
+            // Sanitize and validate inputs
+            $email = $security->sanitizeInput($_POST['email'] ?? '');
+            $username = $security->sanitizeInput($_POST['username'] ?? '');
+            $password = $_POST['password'] ?? '';
+            $phoneNumber = $security->sanitizeInput($_POST['phone_number'] ?? '');
+            $address = $security->sanitizeInput($_POST['address'] ?? '');
+
+            // Validate required fields
+            if (empty($email) || empty($username) || empty($password)) {
+                throw new Exception('Email, username, and password are required.');
+            }
+
+            // Validate email format
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                throw new Exception('Invalid email format.');
+            }
+
+            // Check email uniqueness in both users and hairdressers tables
+            $stmt = parent::$pdo->prepare("SELECT COUNT(*) FROM users WHERE email = ?");
+            $stmt->execute([$email]);
+            if ($stmt->fetchColumn() > 0) {
+                throw new Exception('Email is already registered.');
+            }
+
+            $stmt = parent::$pdo->prepare("SELECT COUNT(*) FROM hairdressers WHERE email = ?");
+            $stmt->execute([$email]);
+            if ($stmt->fetchColumn() > 0) {
+                throw new Exception('Email is already registered.');
+            }
+
+            // Validate username length
+            if (strlen($username) < 3 || strlen($username) > 50) {
+                throw new Exception('Username must be between 3 and 50 characters.');
+            }
+
+            // Validate password strength
+            if (!$security->validatePasswordStrength($password)) {
+                throw new Exception('Password must be at least 8 characters long and contain uppercase, lowercase, number, and special character.');
+            }
+
+            // Validate phone number format if provided
+            if (!empty($phoneNumber) && !preg_match('/^\+?[0-9\s-()]{8,20}$/', $phoneNumber)) {
+                throw new Exception('Invalid phone number format.');
+            }
+
+            // Hash password
+            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+
+            // Insert user into database
+            $stmt = parent::$pdo->prepare("
+                INSERT INTO users (email, username, password, phone_number, address, created_at)
+                VALUES (?, ?, ?, ?, ?, NOW())
+            ");
+
+            $stmt->execute([$email, $username, $hashedPassword, $phoneNumber ?: null, $address ?: null]);
+
+            // Set success message and redirect
+            $_SESSION['success_message'] = 'Registration successful! Please log in.';
+            header('Location: /login');
+            exit;
+
+        } catch (Exception $e) {
+            $errors[] = $e->getMessage();
+            $this->render('auth/register', [
+                'errors' => $errors,
+                'email' => $email ?? '',
+                'username' => $username ?? '',
+                'phoneNumber' => $phoneNumber ?? '',
+                'address' => $address ?? ''
+            ]);
+        }
     }
 
     public function logout()
@@ -130,5 +161,10 @@ class AuthController
         session_destroy();
         header("Location: /");
         exit;
+    }
+
+    protected function render($view, $data = []) {
+        extract($data);
+        require(__DIR__ . "/../views/" . $view . ".php");
     }
 }
