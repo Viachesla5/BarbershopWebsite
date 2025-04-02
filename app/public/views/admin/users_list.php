@@ -1,5 +1,8 @@
 <?php require(__DIR__ . '/../partials/header.php'); ?>
 
+<!-- Add the JavaScript file -->
+<script src="/assets/js/user_management.js"></script>
+
 <div class="container mx-auto mt-8 p-6">
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold text-white">Manage Users</h1>
@@ -35,7 +38,12 @@
                             </td>
                             <td class="px-6 py-4 text-sm space-x-3">
                                 <a href="/admin/users/edit/<?= $user['id'] ?>" class="text-blue-400 hover:text-blue-500">Edit</a>
-                                <a href="/admin/users/delete/<?= $user['id'] ?>" class="text-red-400 hover:text-red-500" onclick="return confirm('Are you sure you want to delete this user?')">Delete</a>
+                                <button 
+                                    class="delete-user-btn text-red-400 hover:text-red-500" 
+                                    data-user-id="<?= $user['id'] ?>"
+                                >
+                                    Delete
+                                </button>
                             </td>
                         </tr>
                     <?php endforeach; ?>

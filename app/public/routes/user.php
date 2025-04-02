@@ -13,3 +13,9 @@ Route::add('/user/([0-9]*)', function ($userId) {
     $userController = new UserController();
     $userController->get($userId);
 }, 'get');
+
+// API endpoint for deleting users
+Route::add('/api/users/([0-9]*)', function ($userId) {
+    $userController = new UserController();
+    $userController->deleteUser($userId);
+}, 'delete');
