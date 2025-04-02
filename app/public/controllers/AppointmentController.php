@@ -186,4 +186,73 @@ class AppointmentController
 
         echo json_encode(['success' => true, 'message' => 'Appointment deleted successfully.']);
     }
+
+    /**
+     * Handle editing an appointment
+     * GET: Show the edit form
+     * POST: Process the form submission
+     */
+    public function editAppointment($id)
+    {
+        requireHairdresser(); // or requireAdmin() if only admins can edit
+
+        // Get the appointment data
+        $appointment = $this->appointmentModel->getById($id);
+        if (!$appointment) {
+            header("Location: /appointments");
+            exit;
+        }
+
+        // Get lists for dropdowns
+        $users = $this->userModel->getAll();
+        $hairdressers = $this->hairdresserModel->getAll();
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $errors = [];
+
+            // Validate and sanitize input
+            $userId = filter_var($_POST['user_id'], FILTER_VALIDATE_INT);
+            $hairdresserId = filter_var($_POST['hairdresser_id'], FILTER_VALIDATE_INT);
+            $date = filter_var($_POST['appointment_date'], FILTER_SANITIZE_SPECIAL_CHARS);
+            $time = filter_var($_POST['appointment_time'], FILTER_SANITIZE_SPECIAL_CHARS);
+            $status = filter_var($_POST['status'], FILTER_SANITIZE_SPECIAL_CHARS);
+
+            // Validate required fields
+            if (!$userId || !$hairdresserId || !$date || !$time) {
+                $errors[] = "All fields are required.";
+            }
+
+            // Validate date is not in the past
+            $appointmentDateTime = strtotime($date . ' ' . $time);
+            if ($appointmentDateTime < time()) {
+                $errors[] = "Appointment date and time cannot be in the past.";
+            }
+
+            // Check for conflicts with other appointments
+            $existing = $this->appointmentModel->findByHairdresserDateTime($hairdresserId, $date, $time);
+            if ($existing && $existing['id'] != $id) {
+                $errors[] = "This time slot is already booked.";
+            }
+
+            if (empty($errors)) {
+                $data = [
+                    'user_id' => $userId,
+                    'hairdresser_id' => $hairdresserId,
+                    'appointment_date' => $date,
+                    'appointment_time' => $time,
+                    'status' => $status
+                ];
+
+                if ($this->appointmentModel->update($id, $data)) {
+                    header("Location: /appointments");
+                    exit;
+                } else {
+                    $errors[] = "Failed to update appointment.";
+                }
+            }
+        }
+
+        // Show the edit form
+        require(__DIR__ . "/../views/appointments/edit.php");
+    }
 }

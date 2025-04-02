@@ -24,7 +24,7 @@ class UserModel extends BaseModel
             ':password' => $data['password'],
             ':phone_number' => $data['phone_number'],
             ':address' => $data['address'],
-            ':profile_picture' => $data['profile_picture'],
+            ':profile_picture' => $data['profile_picture'] ?? null,
             ':is_admin' => $data['is_admin']
         ]);
         return self::$pdo->lastInsertId();

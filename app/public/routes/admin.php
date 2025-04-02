@@ -76,7 +76,17 @@ Route::add('/admin/appointments', function () {
     $adminController->listAppointments();
 }, 'get');
 
+Route::add('/admin/appointments/edit/([0-9]*)', function ($id) {
+    $adminController = new AdminController();
+    $adminController->editAppointment($id);
+}, ['get', 'post']);
+
 Route::add('/admin/appointments/status/([0-9]*)', function ($id) {
     $adminController = new AdminController();
     $adminController->changeAppointmentStatus($id);
 }, ['get', 'post']);
+
+Route::add('/admin/appointments/delete/([0-9]*)', function ($id) {
+    $adminController = new AdminController();
+    $adminController->deleteAppointment($id);
+}, 'get');

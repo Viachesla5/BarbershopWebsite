@@ -43,8 +43,12 @@ class AdminController
             $user = $this->userModel->getById($apt['user_id']);
             $hairdresser = $this->hairdresserModel->getById($apt['hairdresser_id']);
 
+            // Format the appointment date and time
+            $date = new DateTime($apt['appointment_date'] . ' ' . $apt['appointment_time']);
+            $formattedDate = $date->format('Y-m-d H:i:s');
+
             $recent_activities[] = [
-                'date' => $apt['created_at'],
+                'date' => $formattedDate,
                 'description' => "Appointment scheduled with " . ($hairdresser['name'] ?? 'Unknown Hairdresser'),
                 'user' => $user['username'] ?? 'Unknown User',
                 'status' => $apt['status']
@@ -518,7 +522,7 @@ class AdminController
     public function listAppointments()
     {
         requireAdmin();
-        $appointments = $this->appointmentModel->getAll(); // all appointments
+        $appointments = $this->appointmentModel->getAllWithNames();
         require(__DIR__ . '/../views/admin/appointments_list.php');
     }
 
@@ -535,5 +539,108 @@ class AdminController
             header("Location: /admin/appointments");
             exit;
         }
+    }
+
+    public function editAppointment($id)
+    {
+        requireAdmin();
+
+        // Get appointment data
+        $appointment = $this->appointmentModel->getById($id);
+        error_log("Appointment data: " . print_r($appointment, true));
+        
+        if (!$appointment) {
+            $_SESSION['error'] = "Appointment not found.";
+            header("Location: /admin/appointments");
+            exit;
+        }
+
+        // Get all users and hairdressers for dropdowns
+        $users = $this->userModel->getAll();
+        error_log("Users data: " . print_r($users, true));
+        
+        $hairdressers = $this->hairdresserModel->getAll();
+        error_log("Hairdressers data: " . print_r($hairdressers, true));
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            try {
+                $security = Security::getInstance();
+                
+                // Validate CSRF token
+                $security->validateCSRFToken($_POST['csrf_token'] ?? '');
+                
+                // Check rate limit
+                $security->checkRateLimit('edit_appointment', $_SERVER['REMOTE_ADDR']);
+
+                // Sanitize inputs
+                $userId = $security->sanitizeInput($_POST['user_id'] ?? '');
+                $hairdresserId = $security->sanitizeInput($_POST['hairdresser_id'] ?? '');
+                $appointmentDate = $security->sanitizeInput($_POST['appointment_date'] ?? '');
+                $appointmentTime = $security->sanitizeInput($_POST['appointment_time'] ?? '');
+                $status = $security->sanitizeInput($_POST['status'] ?? '');
+
+                // Validate required fields
+                if (empty($userId) || empty($hairdresserId) || empty($appointmentDate) || empty($appointmentTime) || empty($status)) {
+                    throw new Exception("All fields are required.");
+                }
+
+                // Validate date and time
+                $appointmentDateTime = strtotime($appointmentDate . ' ' . $appointmentTime);
+                if ($appointmentDateTime < time()) {
+                    throw new Exception("Appointment date and time cannot be in the past.");
+                }
+
+                // Check for appointment conflicts
+                $conflict = $this->appointmentModel->findByHairdresserDateTime($hairdresserId, $appointmentDate, $appointmentTime);
+                if ($conflict && $conflict['id'] != $id) {
+                    throw new Exception("This time slot is already booked for the selected hairdresser.");
+                }
+
+                // Update appointment
+                $this->appointmentModel->update($id, [
+                    'user_id' => $userId,
+                    'hairdresser_id' => $hairdresserId,
+                    'appointment_date' => $appointmentDate,
+                    'appointment_time' => $appointmentTime,
+                    'status' => $status
+                ]);
+
+                $_SESSION['success'] = "Appointment updated successfully.";
+                header("Location: /admin/appointments");
+                exit;
+
+            } catch (Exception $e) {
+                $_SESSION['error'] = $e->getMessage();
+            }
+        }
+
+        // Load the edit form view
+        require(__DIR__ . '/../views/admin/appointments/edit.php');
+    }
+
+    public function deleteAppointment($id)
+    {
+        requireAdmin();
+        
+        try {
+            // Get appointment data before deletion
+            $appointment = $this->appointmentModel->getById($id);
+            
+            if (!$appointment) {
+                $_SESSION['error'] = "Appointment not found.";
+                header("Location: /admin/appointments");
+                exit;
+            }
+
+            // Delete the appointment
+            $this->appointmentModel->delete($id);
+            
+            $_SESSION['success'] = "Appointment deleted successfully.";
+        } catch (Exception $e) {
+            $_SESSION['error'] = "Failed to delete appointment: " . $e->getMessage();
+        }
+        
+        header("Location: /admin/appointments");
+        exit;
     }
 }

@@ -1,17 +1,21 @@
-<?php require(__DIR__ . "/../partials/header.php"); ?>
+<?php 
+require(__DIR__ . "/../partials/header.php");
+require(__DIR__ . "/../partials/toast.php");
+?>
 
 <div class="container mx-auto mt-8 flex justify-center">
     <form action="/login" method="POST" class="w-full max-w-md bg-dark-100 p-6 rounded shadow-lg border border-dark-50">
         <h2 class="text-2xl font-bold mb-6 text-center text-white">Login</h2>
 
         <?php if (!empty($errors)): ?>
-            <div class="mb-4 text-red-400 bg-red-900/20 p-3 rounded">
-                <ul>
-                    <?php foreach ($errors as $err): ?>
-                        <li><?= htmlspecialchars($err); ?></li>
-                    <?php endforeach; ?>
-                </ul>
-            </div>
+            <?php foreach ($errors as $err): ?>
+                <?php showToast($err, 'error'); ?>
+            <?php endforeach; ?>
+        <?php endif; ?>
+
+        <?php if (isset($_SESSION['success'])): ?>
+            <?php showToast($_SESSION['success'], 'success'); ?>
+            <?php unset($_SESSION['success']); ?>
         <?php endif; ?>
 
         <div class="mb-4">

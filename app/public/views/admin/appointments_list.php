@@ -11,8 +11,8 @@
                 <thead class="bg-dark-200">
                     <tr>
                         <th class="px-6 py-3 text-left text-sm font-semibold text-gray-200">ID</th>
-                        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-200">User ID</th>
-                        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-200">Hairdresser ID</th>
+                        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-200">User</th>
+                        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-200">Hairdresser</th>
                         <th class="px-6 py-3 text-left text-sm font-semibold text-gray-200">Date</th>
                         <th class="px-6 py-3 text-left text-sm font-semibold text-gray-200">Time</th>
                         <th class="px-6 py-3 text-left text-sm font-semibold text-gray-200">Status</th>
@@ -23,28 +23,20 @@
                     <?php foreach ($appointments as $appointment) : ?>
                         <tr class="hover:bg-dark-200 transition duration-150">
                             <td class="px-6 py-4 text-sm text-gray-300"><?= $appointment['id'] ?></td>
-                            <td class="px-6 py-4 text-sm text-gray-300"><?= $appointment['user_id'] ?></td>
-                            <td class="px-6 py-4 text-sm text-gray-300"><?= $appointment['hairdresser_id'] ?></td>
+                            <td class="px-6 py-4 text-sm text-gray-300"><?= htmlspecialchars($appointment['user_name']) ?></td>
+                            <td class="px-6 py-4 text-sm text-gray-300"><?= htmlspecialchars($appointment['hairdresser_name']) ?></td>
                             <td class="px-6 py-4 text-sm text-gray-300"><?= $appointment['appointment_date'] ?></td>
                             <td class="px-6 py-4 text-sm text-gray-300"><?= $appointment['appointment_time'] ?></td>
-                            <td class="px-6 py-4">
-                                <form action="/admin/appointments/update-status" method="POST" class="flex items-center space-x-2">
-                                    <input type="hidden" name="appointment_id" value="<?= $appointment['id'] ?>">
-                                    <select name="status" class="bg-dark-200 text-white border border-dark-50 rounded px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
-                                        <option value="upcoming" <?= $appointment['status'] === 'upcoming' ? 'selected' : '' ?> class="bg-dark-200">
-                                            Upcoming
-                                        </option>
-                                        <option value="completed" <?= $appointment['status'] === 'completed' ? 'selected' : '' ?> class="bg-dark-200">
-                                            Completed
-                                        </option>
-                                        <option value="canceled" <?= $appointment['status'] === 'canceled' ? 'selected' : '' ?> class="bg-dark-200">
-                                            Canceled
-                                        </option>
-                                    </select>
-                                    <button type="submit" class="bg-blue-600 text-white px-2 py-1 rounded text-sm hover:bg-blue-700 transition duration-150">
-                                        Update
-                                    </button>
-                                </form>
+                            <td class="px-6 py-4 text-sm text-gray-300">
+                                <?php
+                                $statusClass = match($appointment['status']) {
+                                    'upcoming' => 'text-yellow-400',
+                                    'completed' => 'text-green-400',
+                                    'cancelled' => 'text-red-400',
+                                    default => 'text-gray-300'
+                                };
+                                ?>
+                                <span class="<?= $statusClass ?>"><?= ucfirst($appointment['status']) ?></span>
                             </td>
                             <td class="px-6 py-4 text-sm">
                                 <a href="/admin/appointments/edit/<?= $appointment['id'] ?>" class="text-blue-400 hover:text-blue-500 mr-3">Edit</a>

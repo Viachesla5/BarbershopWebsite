@@ -1,19 +1,32 @@
 <?php require(__DIR__ . "/../partials/header.php"); ?>
 
 <!-- Hero Section -->
-<div class="relative bg-gray-900 text-white">
-  <div class="container mx-auto px-4 py-20 text-center">
-    <h1 class="text-4xl md:text-6xl font-bold mb-4">Welcome to Our Barbershop</h1>
-    <p class="text-gray-300 max-w-2xl mx-auto mb-8">
-      Experience top-notch styling in a modern, comfortable setting.
-      Our expert barbers are here to help you look and feel your best.
-    </p>
-    <a 
-      href="/appointments/calendar" 
-      class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full text-lg font-semibold transition-all">
-      Book an Appointment
-    </a>
-  </div>
+<div class="relative min-h-[600px] flex items-center justify-center">
+    <!-- Background Image with Overlay -->
+    <div class="absolute inset-0 z-0">
+        <img 
+            src="/assets/images/barbershop.png" 
+            alt="Barbershop Interior" 
+            class="w-full h-full object-cover"
+        >
+        <div class="absolute inset-0 bg-gray-900/70"></div>
+    </div>
+    
+    <!-- Content -->
+    <div class="relative z-10 container mx-auto px-4 text-center">
+        <h1 class="text-5xl md:text-7xl font-bold mb-6 text-white drop-shadow-lg">
+            Welcome to Our Barbershop
+        </h1>
+        <p class="text-xl text-gray-200 max-w-3xl mx-auto mb-10 drop-shadow-lg">
+            Experience top-notch styling in a modern, comfortable setting.
+            Our expert barbers are here to help you look and feel your best.
+        </p>
+        <a 
+            href="/appointments/calendar" 
+            class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-full text-xl font-semibold transition-all transform hover:scale-105 shadow-lg hover:shadow-xl">
+            Book an Appointment
+        </a>
+    </div>
 </div>
 
 <!-- Services Section -->

@@ -22,40 +22,44 @@ class AuthController extends BaseModel
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $validator = new Validator();
+            $errors = [];
 
             $email = trim($_POST['email'] ?? '');
             $password = $_POST['password'] ?? '';
 
-            $validator->validateEmail($email);
-            $validator->validateRequired('password', $password, 'Password');
+            try {
+                $validator->validateEmail($email);
+                $validator->validateRequired('password', $password, 'Password');
 
-            if ($validator->hasErrors()) {
-                $errors = $validator->getErrors();
-                require(__DIR__ . '/../views/auth/login.php');
-                return;
+                if ($validator->hasErrors()) {
+                    throw new Exception($validator->getErrors()[0]);
+                }
+
+                // 1) Check 'users' table
+                $user = $this->userModel->getByEmail($email);
+                if ($user && password_verify($password, $user['password'])) {
+                    // If user is found
+                    $_SESSION['user_id'] = $user['id'];
+                    $_SESSION['is_admin'] = ($user['is_admin'] == 1);
+                    $_SESSION['success'] = "Welcome back, " . htmlspecialchars($user['username']) . "!";
+                    header("Location: /"); // or /admin if admin
+                    exit;
+                }
+
+                // 2) If not in 'users', check 'hairdressers'
+                $hairdresser = $this->hairdresserModel->getByEmail($email);
+                if ($hairdresser && password_verify($password, $hairdresser['password'])) {
+                    $_SESSION['hairdresser_id'] = $hairdresser['id'];
+                    $_SESSION['success'] = "Welcome back, " . htmlspecialchars($hairdresser['name']) . "!";
+                    header("Location: /hairdressers");
+                    exit;
+                }
+
+                // 3) Otherwise, error
+                throw new Exception("Invalid email or password.");
+            } catch (Exception $e) {
+                $errors[] = $e->getMessage();
             }
-
-            // 1) Check 'users' table
-            $user = $this->userModel->getByEmail($email);
-            if ($user && password_verify($password, $user['password'])) {
-                // If user is found
-                $_SESSION['user_id'] = $user['id'];
-                $_SESSION['is_admin'] = ($user['is_admin'] == 1);
-
-                header("Location: /"); // or /admin if admin
-                exit;
-            }
-
-            // 2) If not in 'users', check 'hairdressers'
-            $hairdresser = $this->hairdresserModel->getByEmail($email);
-            if ($hairdresser && password_verify($password, $hairdresser['password'])) {
-                $_SESSION['hairdresser_id'] = $hairdresser['id'];
-                header("Location: /hairdressers");
-                exit;
-            }
-
-            // 3) Otherwise, error
-            $error = "Invalid email or password.";
         }
         require(__DIR__ . '/../views/auth/login.php');
     }
@@ -99,59 +103,60 @@ class AuthController extends BaseModel
                 throw new Exception('Invalid email format.');
             }
 
-            // Check email uniqueness in both users and hairdressers tables
-            $stmt = parent::$pdo->prepare("SELECT COUNT(*) FROM users WHERE email = ?");
-            $stmt->execute([$email]);
-            if ($stmt->fetchColumn() > 0) {
+            // Check if email exists in either table
+            if ($this->userModel->getByEmail($email)) {
                 throw new Exception('Email is already registered.');
             }
-
-            $stmt = parent::$pdo->prepare("SELECT COUNT(*) FROM hairdressers WHERE email = ?");
-            $stmt->execute([$email]);
-            if ($stmt->fetchColumn() > 0) {
+            if ($this->hairdresserModel->getByEmail($email)) {
                 throw new Exception('Email is already registered.');
             }
 
             // Validate username length
-            if (strlen($username) < 3 || strlen($username) > 50) {
-                throw new Exception('Username must be between 3 and 50 characters.');
+            if (strlen($username) < 3) {
+                throw new Exception('Username must be at least 3 characters long.');
             }
 
             // Validate password strength
-            if (!$security->validatePasswordStrength($password)) {
-                throw new Exception('Password must be at least 8 characters long and contain uppercase, lowercase, number, and special character.');
+            $security->validatePasswordStrength($password);
+
+            // Validate phone number if provided
+            if (!empty($phoneNumber)) {
+                if (!preg_match('/^[0-9]{10}$/', $phoneNumber)) {
+                    throw new Exception('Phone number must be 10 digits.');
+                }
             }
 
-            // Validate phone number format if provided
-            if (!empty($phoneNumber) && !preg_match('/^\+?[0-9\s-()]{8,20}$/', $phoneNumber)) {
-                throw new Exception('Invalid phone number format.');
-            }
+            // Create user
+            $userData = [
+                'email' => $email,
+                'username' => $username,
+                'password' => password_hash($password, PASSWORD_DEFAULT),
+                'phone_number' => $phoneNumber ?: null,
+                'address' => $address ?: null,
+                'is_admin' => 0
+            ];
 
-            // Hash password
-            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-
-            // Insert user into database
-            $stmt = parent::$pdo->prepare("
-                INSERT INTO users (email, username, password, phone_number, address, created_at)
-                VALUES (?, ?, ?, ?, ?, NOW())
-            ");
-
-            $stmt->execute([$email, $username, $hashedPassword, $phoneNumber ?: null, $address ?: null]);
-
+            $this->userModel->create($userData);
+            
             // Set success message and redirect
-            $_SESSION['success_message'] = 'Registration successful! Please log in.';
-            header('Location: /login');
-            exit;
+            $_SESSION['success'] = "Registration successful! Please login.";
+            if (!headers_sent()) {
+                header("Location: /login");
+                exit;
+            } else {
+                echo "<script>window.location.href = '/login';</script>";
+                exit;
+            }
 
         } catch (Exception $e) {
             $errors[] = $e->getMessage();
-            $this->render('auth/register', [
-                'errors' => $errors,
-                'email' => $email ?? '',
-                'username' => $username ?? '',
-                'phoneNumber' => $phoneNumber ?? '',
-                'address' => $address ?? ''
-            ]);
+            // Keep the form values for better UX
+            $email = $_POST['email'] ?? '';
+            $username = $_POST['username'] ?? '';
+            $phoneNumber = $_POST['phone_number'] ?? '';
+            $address = $_POST['address'] ?? '';
+            require(__DIR__ . '/../views/auth/register.php');
+            return;
         }
     }
 

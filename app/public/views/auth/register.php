@@ -1,5 +1,6 @@
 <?php 
 require(__DIR__ . "/../partials/header.php");
+require(__DIR__ . "/../partials/toast.php");
 require_once(__DIR__ . '/../../lib/Security.php');
 $security = Security::getInstance();
 ?>
@@ -10,13 +11,15 @@ $security = Security::getInstance();
 
         <!-- Error Messages -->
         <?php if (!empty($errors)): ?>
-            <div class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-                <ul class="list-disc list-inside">
-                    <?php foreach ($errors as $error): ?>
-                        <li><?= htmlspecialchars($error); ?></li>
-                    <?php endforeach; ?>
-                </ul>
-            </div>
+            <?php foreach ($errors as $error): ?>
+                <?php showToast($error, 'error'); ?>
+            <?php endforeach; ?>
+        <?php endif; ?>
+
+        <!-- Success Message -->
+        <?php if (isset($_SESSION['success'])): ?>
+            <?php showToast($_SESSION['success'], 'success'); ?>
+            <?php unset($_SESSION['success']); ?>
         <?php endif; ?>
 
         <!-- CSRF Token -->
