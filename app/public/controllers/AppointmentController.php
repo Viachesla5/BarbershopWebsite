@@ -34,8 +34,11 @@ class AppointmentController
     {
         requireUser();  // Must be logged in
 
-        // We'll retrieve appointments with hairdresser & user names
-        $appointments = $this->appointmentModel->getAllWithNames();
+        // Get the logged-in user's ID
+        $userId = $_SESSION['user_id'];
+
+        // We'll retrieve appointments with hairdresser & user names, filtered by user ID
+        $appointments = $this->appointmentModel->getAllWithNames(['user_id' => $userId]);
 
         $events = [];
         foreach ($appointments as $apt) {
@@ -45,12 +48,20 @@ class AppointmentController
             $userName = $apt['user_name'];
             $hdName   = $apt['hairdresser_name'];
 
-            $title = "User: $userName, HD: $hdName";
+            $title = "With: $hdName";
 
             $events[] = [
-                'id'    => $apt['id'],
-                'title' => $title,    // The event label
-                'start' => $start,    // Full datetime, e.g., 2025-01-19T07:00:00
+                'id' => $apt['id'],
+                'title' => $title,
+                'start' => $start,
+                'backgroundColor' => '#3B82F6', // Blue color for user's appointments
+                'borderColor' => '#2563EB',
+                'textColor' => '#FFFFFF',
+                'extendedProps' => [
+                    'userName' => $userName,
+                    'hairdresserName' => $hdName,
+                    'status' => $apt['status']
+                ]
             ];
         }
 

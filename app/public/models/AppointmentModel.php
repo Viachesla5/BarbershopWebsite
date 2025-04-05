@@ -93,7 +93,7 @@ class AppointmentModel extends BaseModel
      *  Join users & hairdressers to get user_name and hairdresser_name.
      *  For user-friendly FullCalendar event titles, etc.
      */
-    public function getAllWithNames()
+    public function getAllWithNames($filters = [])
     {
         $sql = "SELECT 
                     a.*,
@@ -102,10 +102,28 @@ class AppointmentModel extends BaseModel
                     a.created_at
                 FROM appointments a
                 JOIN users u ON a.user_id = u.id
-                JOIN hairdressers h ON a.hairdresser_id = h.id
-                ORDER BY a.appointment_date ASC, a.appointment_time ASC";
+                JOIN hairdressers h ON a.hairdresser_id = h.id";
+        
+        $where = [];
+        $params = [];
 
-        $stmt = self::$pdo->query($sql);
+        if (isset($filters['user_id'])) {
+            $where[] = "a.user_id = :user_id";
+            $params[':user_id'] = $filters['user_id'];
+        }
+        if (isset($filters['hairdresser_id'])) {
+            $where[] = "a.hairdresser_id = :hairdresser_id";
+            $params[':hairdresser_id'] = $filters['hairdresser_id'];
+        }
+        
+        if ($where) {
+            $sql .= " WHERE " . implode(" AND ", $where);
+        }
+        
+        $sql .= " ORDER BY a.appointment_date ASC, a.appointment_time ASC";
+
+        $stmt = self::$pdo->prepare($sql);
+        $stmt->execute($params);
         return $stmt->fetchAll();
     }
 

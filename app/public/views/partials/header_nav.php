@@ -31,11 +31,12 @@
                     <a href="/logout" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200">Logout</a>
                 <?php elseif (!empty($_SESSION['hairdresser_id'])): ?>
                     <a href="/profile" class="text-gray-300 hover:text-white hover:bg-dark-300 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200">My Profile</a>
-                    <a href="/appointments" class="text-gray-300 hover:text-white hover:bg-dark-300 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200">My Appointments</a>
+                    <a href="/appointments" class="text-gray-300 hover:text-white hover:bg-dark-300 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200">Appointments</a>
+                    <a href="/hairdressers" class="text-gray-300 hover:text-white hover:bg-dark-300 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200">View Hairdressers</a>
                     <a href="/logout" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200">Logout</a>
                 <?php elseif (!empty($_SESSION['user_id'])): ?>
                     <a href="/profile" class="text-gray-300 hover:text-white hover:bg-dark-300 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200">My Profile</a>
-                    <a href="/appointments/calendar" class="text-gray-300 hover:text-white hover:bg-dark-300 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200">Appointments</a>
+                    <a href="/appointments/calendar" class="text-gray-300 hover:text-white hover:bg-dark-300 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200">My Appointments</a>
                     <a href="/hairdressers" class="text-gray-300 hover:text-white hover:bg-dark-300 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200">View Hairdressers</a>
                     <a href="/logout" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200">Logout</a>
                 <?php else: ?>
@@ -56,6 +57,7 @@
             <?php elseif (!empty($_SESSION['hairdresser_id'])): ?>
                 <a href="/profile" class="text-gray-300 hover:text-white hover:bg-dark-300 block px-3 py-2 rounded-md text-base font-medium">My Profile</a>
                 <a href="/appointments" class="text-gray-300 hover:text-white hover:bg-dark-300 block px-3 py-2 rounded-md text-base font-medium">My Appointments</a>
+                <a href="/hairdressers" class="text-gray-300 hover:text-white hover:bg-dark-300 block px-3 py-2 rounded-md text-base font-medium">Hairdressers</a>
                 <a href="/logout" class="bg-red-600 hover:bg-red-700 text-white block px-3 py-2 rounded-md text-base font-medium">Logout</a>
             <?php elseif (!empty($_SESSION['user_id'])): ?>
                 <a href="/profile" class="text-gray-300 hover:text-white hover:bg-dark-300 block px-3 py-2 rounded-md text-base font-medium">My Profile</a>
@@ -73,22 +75,6 @@
 <script>
 function toggleMobileMenu() {
     const mobileMenu = document.getElementById('mobileMenu');
-    if (mobileMenu.classList.contains('hidden')) {
-        mobileMenu.classList.remove('hidden');
-        // Add slide down animation
-        mobileMenu.style.maxHeight = '0px';
-        mobileMenu.style.transition = 'max-height 0.3s ease-in-out';
-        requestAnimationFrame(() => {
-            mobileMenu.style.maxHeight = mobileMenu.scrollHeight + 'px';
-        });
-    } else {
-        // Add slide up animation
-        mobileMenu.style.maxHeight = '0px';
-        mobileMenu.addEventListener('transitionend', function handler() {
-            mobileMenu.classList.add('hidden');
-            mobileMenu.style.maxHeight = null;
-            mobileMenu.removeEventListener('transitionend', handler);
-        });
-    }
+    mobileMenu.classList.toggle('hidden');
 }
 </script>
