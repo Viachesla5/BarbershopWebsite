@@ -17,9 +17,13 @@
         <h1 class="text-5xl md:text-7xl font-bold mb-6 text-white drop-shadow-lg">
             Welcome to Our Barbershop
         </h1>
-        <p class="text-xl text-gray-200 max-w-3xl mx-auto mb-10 drop-shadow-lg">
+        <p class="text-xl text-gray-200 max-w-3xl mx-auto mb-4 drop-shadow-lg">
             Experience top-notch styling in a modern, comfortable setting.
             Our expert barbers are here to help you look and feel your best.
+        </p>
+        <p class="text-lg text-blue-300 font-semibold mb-10 drop-shadow-lg italic">
+            Open 24/7* - Because bad hair doesn't take a break! 
+            <span class="text-sm text-gray-300">*By appointment only</span>
         </p>
         <a 
             href="/appointments/calendar" 

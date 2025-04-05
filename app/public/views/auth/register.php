@@ -67,6 +67,19 @@ $security = Security::getInstance();
             <p class="text-gray-400 text-sm mt-1">Must be at least 8 characters long and contain uppercase, lowercase, number, and special character</p>
         </div>
 
+        <!-- CONFIRM PASSWORD -->
+        <div class="mb-4">
+            <label class="block mb-1 font-semibold text-gray-200" for="confirm_password">Confirm Password</label>
+            <input 
+                type="password" 
+                name="confirm_password" 
+                id="confirm_password"
+                class="w-full bg-dark-200 text-white border border-dark-50 rounded px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                required
+            >
+            <p class="text-red-400 text-sm mt-1">Required</p>
+        </div>
+
         <!-- Phone Number -->
         <div class="mb-4">
             <label class="block mb-1 font-semibold text-gray-200" for="phone_number">Phone Number</label>

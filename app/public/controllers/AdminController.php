@@ -99,11 +99,22 @@ class AdminController
                 $email = $security->sanitizeInput($_POST['email'] ?? '');
                 $username = $security->sanitizeInput($_POST['username'] ?? '');
                 $password = $_POST['password'] ?? ''; // Don't sanitize password
+                $confirmPassword = $_POST['confirm_password'] ?? '';
                 $phoneNumber = $security->sanitizeInput($_POST['phone_number'] ?? '');
                 $address = $security->sanitizeInput($_POST['address'] ?? '');
                 $isAdminInput = isset($_POST['is_admin']) ? 1 : 0;
 
                 $validator = new Validator();
+
+                // Validate required fields
+                if (empty($email) || empty($username) || empty($password) || empty($confirmPassword)) {
+                    throw new Exception('All fields are required.');
+                }
+
+                // Validate password match
+                if ($password !== $confirmPassword) {
+                    throw new Exception('Passwords do not match.');
+                }
 
                 // Check if email already exists in users table
                 if ($this->userModel->getByEmail($email)) {
@@ -322,24 +333,24 @@ class AdminController
                 // Sanitize inputs
                 $email = $security->sanitizeInput($_POST['email'] ?? '');
                 $name = $security->sanitizeInput($_POST['name'] ?? '');
-                $password = $_POST['password'] ?? ''; // Don't sanitize password
+                $password = $_POST['password'] ?? '';
+                $confirmPassword = $_POST['confirm_password'] ?? '';
                 $specialization = $security->sanitizeInput($_POST['specialization'] ?? '');
                 $phoneNumber = $security->sanitizeInput($_POST['phone_number'] ?? '');
                 $address = $security->sanitizeInput($_POST['address'] ?? '');
 
-                $validator = new Validator();
-
-                // Check if email already exists in hairdressers table
-                if ($this->hairdresserModel->getByEmail($email)) {
-                    throw new Exception('Email address is already registered');
+                // Validate required fields
+                if (empty($email) || empty($name) || empty($password) || empty($confirmPassword) || empty($specialization)) {
+                    throw new Exception('All fields are required.');
                 }
 
-                // Check if email already exists in users table
-                if ($this->userModel->getByEmail($email)) {
-                    throw new Exception('Email address is already registered');
+                // Validate password match
+                if ($password !== $confirmPassword) {
+                    throw new Exception('Passwords do not match.');
                 }
 
                 // Validate email format
+                $validator = new Validator();
                 $validator->validateEmail($email);
 
                 // Name must be at least 2 chars
@@ -363,6 +374,16 @@ class AdminController
                 // Address is optional, but let's limit to 200 chars
                 if (!empty($address)) {
                     $validator->validateMaxLength('address', $address, 200, 'Address');
+                }
+
+                // Check if email already exists in hairdressers table
+                if ($this->hairdresserModel->getByEmail($email)) {
+                    throw new Exception('Email address is already registered');
+                }
+
+                // Check if email already exists in users table
+                if ($this->userModel->getByEmail($email)) {
+                    throw new Exception('Email address is already registered');
                 }
 
                 // If we get here, all validations passed

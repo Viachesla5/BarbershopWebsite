@@ -90,12 +90,18 @@ class AuthController extends BaseModel
             $email = $security->sanitizeInput($_POST['email'] ?? '');
             $username = $security->sanitizeInput($_POST['username'] ?? '');
             $password = $_POST['password'] ?? '';
+            $confirmPassword = $_POST['confirm_password'] ?? '';
             $phoneNumber = $security->sanitizeInput($_POST['phone_number'] ?? '');
             $address = $security->sanitizeInput($_POST['address'] ?? '');
 
             // Validate required fields
-            if (empty($email) || empty($username) || empty($password)) {
+            if (empty($email) || empty($username) || empty($password) || empty($confirmPassword)) {
                 throw new Exception('Email, username, and password are required.');
+            }
+
+            // Validate password match
+            if ($password !== $confirmPassword) {
+                throw new Exception('Passwords do not match.');
             }
 
             // Validate email format

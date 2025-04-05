@@ -47,8 +47,11 @@ class AppointmentController
 
             $userName = $apt['user_name'];
             $hdName   = $apt['hairdresser_name'];
+            
+            // Format time to show AM/PM
+            $formattedTime = date('g:i A', strtotime($apt['appointment_time']));
 
-            $title = "With: $hdName";
+            $title = "With: $hdName at $formattedTime";
 
             $events[] = [
                 'id' => $apt['id'],
