@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function() {
         body: formData
       })
       .then(response => {
-        // Debug: see if it's HTML or JSON
+        
         return response.text().then(text => {
           try {
             return JSON.parse(text);

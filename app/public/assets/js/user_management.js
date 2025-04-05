@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             const userId = this.getAttribute('data-user-id');
-            const userRow = this.closest('tr'); // Assuming users are in table rows
+            const userRow = this.closest('tr');
 
             fetch(`/api/users/${userId}`, {
                 method: 'DELETE',

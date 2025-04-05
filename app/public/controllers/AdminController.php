@@ -35,7 +35,7 @@ class AdminController
         $total_hairdressers = count($this->hairdresserModel->getAll());
         $total_appointments = count($this->appointmentModel->getAll());
 
-        // Get recent activities (last 10 appointments)
+        // Get recvent activities (last 10 appointments)
         $recent_appointments = $this->appointmentModel->getRecent(10);
         $recent_activities = [];
 

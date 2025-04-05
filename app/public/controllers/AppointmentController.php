@@ -116,7 +116,7 @@ class AppointmentController
     }
 
     /**
-     * Show a list of all appointments (for staff).
+     * Show a list of all appointments (for staff)
      */
     public function listAll()
     {
